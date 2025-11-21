@@ -28,7 +28,27 @@ async function seed() {
     await seedPerformance(mongoose.connection, departments);
 
     // 5. Seed Payroll Configuration
-    await seedPayrollConfiguration(mongoose.connection, employees);
+    const payrollConfig = await seedPayrollConfiguration(mongoose.connection, employees);
+
+    // 5.1 Update Employees with Pay Grades
+    console.log('Assigning Pay Grades to Employees...');
+    const EmployeeProfileModel = mongoose.connection.model('EmployeeProfile');
+    
+    await EmployeeProfileModel.updateOne(
+      { _id: employees.alice._id },
+      { $set: { payGradeId: payrollConfig.payGrades.seniorGrade._id } }
+    );
+    
+    await EmployeeProfileModel.updateOne(
+      { _id: employees.bob._id },
+      { $set: { payGradeId: payrollConfig.payGrades.seniorGrade._id } }
+    );
+
+    await EmployeeProfileModel.updateOne(
+      { _id: employees.charlie._id },
+      { $set: { payGradeId: payrollConfig.payGrades.juniorGrade._id } }
+    );
+    console.log('Pay Grades assigned.');
 
     // 6. Seed Time Management
     await seedTimeManagement(mongoose.connection, employees, departments, positions);
