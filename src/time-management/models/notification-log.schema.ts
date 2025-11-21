@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { HydratedDocument } from 'mongoose';
-import { EmployeeProfile } from '../../employee-profile/models/employee-profile.schema';
 
 export type NotificationLogDocument = HydratedDocument<NotificationLog>;
 

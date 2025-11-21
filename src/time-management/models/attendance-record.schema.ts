@@ -2,7 +2,6 @@ import { Schema, SchemaFactory, Prop } from "@nestjs/mongoose";
 import { Types } from "mongoose";
 import { HydratedDocument } from "mongoose";
 import { PunchType } from "./enums/index";
-import { EmployeeProfile } from "../../employee-profile/models/employee-profile.schema";
 
 export type Punch = {
     type: PunchType;

@@ -3,7 +3,6 @@ import { Schema, Prop, SchemaFactory } from "@nestjs/mongoose";
 import { AttendanceRecord, Punch } from "./attendance-record.schema";
 import { HydratedDocument } from "mongoose";
 import { CorrectionRequestStatus } from "./enums/index";
-import { EmployeeProfile } from "../../employee-profile/models/employee-profile.schema";
 
 export type AttendanceCorrectionRequestDocument = HydratedDocument<AttendanceCorrectionRequest>;
 

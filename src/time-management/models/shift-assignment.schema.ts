@@ -2,9 +2,6 @@ import { SchemaFactory, Schema, Prop } from "@nestjs/mongoose";
 import { Types } from "mongoose";
 import { HydratedDocument } from "mongoose";
 import { ShiftAssignmentStatus } from "./enums/index";
-import { EmployeeProfile } from "../../employee-profile/models/employee-profile.schema";
-import { Department } from "../../organization-structure/models/department.schema";
-import { Position } from "../../organization-structure/models/position.schema";
 
 export type ShiftAssignmentDocument = HydratedDocument<ShiftAssignment>;
 
