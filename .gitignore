@@ -1,7 +1,17 @@
-# compiled output
-/dist
+# Dependencies
+node_modules/
 /node_modules
+backend/node_modules/
+frontend/node_modules/
+**/node_modules/
+
+# Compiled output
+/dist
 /build
+backend/dist/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
 
 # Logs
 logs
@@ -14,10 +24,13 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Tests
 /coverage
 /.nyc_output
+backend/coverage/
+frontend/coverage/
 
 # IDEs and editors
 /.idea
@@ -35,16 +48,22 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# dotenv environment variable files
+# Environment files
 .env
+.env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.local
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
 
-# temp directory
+# Temp directory
 .temp
 .tmp
+temp/
+tmp/
 
 # Runtime data
 pids
@@ -54,3 +73,22 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Package lock files (optional - uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Upload directories
+backend/uploads/
+uploads/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Debug files
+.vscode/launch.json
+debug.log
