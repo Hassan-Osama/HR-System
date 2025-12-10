@@ -76,8 +76,13 @@ interface Employee {
   _id: string;
   firstName: string;
   lastName: string;
-  fullName: string;
+  fullName?: string;
   employeeNumber: string;
+  contractType?: string;
+  primaryDepartmentId?: {
+    _id: string;
+    name: string;
+  } | string;
 }
 
 interface Department {
@@ -85,6 +90,16 @@ interface Department {
   name: string;
   code?: string;
 }
+
+// Available employee types
+const EMPLOYEE_TYPES = [
+  { value: 'FULL_TIME', label: 'Full Time' },
+  { value: 'PART_TIME', label: 'Part Time' },
+  { value: 'CONTRACT', label: 'Contract' },
+  { value: 'INTERN', label: 'Intern' },
+  { value: 'PROBATION', label: 'Probation' },
+  { value: 'FULL_TIME_CONTRACT', label: 'Full Time Contract' },
+];
 
 export default function ReportsTab() {
   const [loading, setLoading] = useState(false);
@@ -97,6 +112,7 @@ export default function ReportsTab() {
     endDate: new Date().toISOString().split('T')[0],
     employeeId: '',
     departmentId: '',
+    employeeType: '',
   });
   const [userRole, setUserRole] = useState<string>('');
 
@@ -122,41 +138,108 @@ export default function ReportsTab() {
     }
     fetchEmployees();
     fetchDepartments();
+    fetchRoles();
   }, []);
 
   const fetchEmployees = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.error('No token found for fetching employees');
+        return;
+      }
 
-      const response = await fetch(`${API_BASE_URL}/api/employee-profile`, {
+      console.log('[ReportsTab] Fetching employees...');
+      // Fetch all employees (increase limit to avoid pagination)
+      const response = await fetch(`${API_BASE_URL}/api/employee-profile?limit=1000`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log('[ReportsTab] Employee response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
-        setEmployees(Array.isArray(data) ? data : data.employees || []);
+        console.log('[ReportsTab] Employee data received:', data);
+
+        // Handle different response formats
+        let employeeList: Employee[] = [];
+        if (Array.isArray(data)) {
+          employeeList = data;
+        } else if (data.employees && Array.isArray(data.employees)) {
+          employeeList = data.employees;
+        } else if (data.data && Array.isArray(data.data)) {
+          employeeList = data.data;
+        }
+
+        console.log('[ReportsTab] Employees loaded:', employeeList.length);
+        setEmployees(employeeList);
+      } else {
+        const errorText = await response.text();
+        console.error('[ReportsTab] Failed to fetch employees:', response.status, errorText);
       }
     } catch (error) {
-      console.error('Failed to fetch employees:', error);
+      console.error('[ReportsTab] Failed to fetch employees:', error);
     }
   };
 
   const fetchDepartments = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found for fetching departments');
+        return;
+      }
+
+      console.log('[ReportsTab] Fetching departments...');
+      const response = await fetch(`${API_BASE_URL}/api/organization-structure/departments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('[ReportsTab] Department response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[ReportsTab] Department data received:', data);
+
+        // Handle different response formats
+        let deptList: Department[] = [];
+        if (Array.isArray(data)) {
+          deptList = data;
+        } else if (data.departments && Array.isArray(data.departments)) {
+          deptList = data.departments;
+        } else if (data.data && Array.isArray(data.data)) {
+          deptList = data.data;
+        }
+
+        console.log('[ReportsTab] Departments loaded:', deptList.length);
+        setDepartments(deptList);
+      } else {
+        const errorText = await response.text();
+        console.error('[ReportsTab] Failed to fetch departments:', response.status, errorText);
+      }
+    } catch (error) {
+      console.error('[ReportsTab] Failed to fetch departments:', error);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(`${API_BASE_URL}/api/organization-structure/departments`, {
+      console.log('[ReportsTab] Fetching system roles...');
+      const response = await fetch(`${API_BASE_URL}/api/employee-profile/roles`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setDepartments(Array.isArray(data) ? data : []);
+        console.log('[ReportsTab] Roles data received:', data);
+        // Roles are available but not currently used for filtering
+        // Can be added as another filter option if needed
       }
     } catch (error) {
-      console.error('Failed to fetch departments:', error);
+      console.error('[ReportsTab] Failed to fetch roles:', error);
     }
   };
 
@@ -187,6 +270,10 @@ export default function ReportsTab() {
         requestBody.departmentId = filters.departmentId;
       }
 
+      if (filters.employeeType) {
+        requestBody.employeeType = filters.employeeType;
+      }
+
       const response = await fetch(`${API_BASE_URL}/time-management/reports/${reportType}`, {
         method: 'POST',
         headers: {
@@ -202,6 +289,8 @@ export default function ReportsTab() {
       }
 
       const data = await response.json();
+      console.log('[ReportsTab] Report data received:', data);
+      console.log('[ReportsTab] First row sample:', data.data?.[0]);
       setReportData(data);
       toast.success('Report generated successfully!');
     } catch (error: any) {
@@ -249,10 +338,43 @@ export default function ReportsTab() {
     return `${hours}h ${mins}m`;
   };
 
-  const getEmployeeName = (employee: any) => {
-    if (!employee) return 'N/A';
+  const getEmployeeName = (employee: any): string => {
+    if (!employee) return 'Unknown Employee';
     if (typeof employee === 'string') return employee;
-    return employee.fullName || `${employee.firstName} ${employee.lastName}` || 'N/A';
+
+    // Try fullName first
+    if (employee.fullName && employee.fullName.trim()) {
+      return employee.fullName.trim();
+    }
+
+    // Combine firstName and lastName
+    const firstName = employee.firstName?.trim() || '';
+    const lastName = employee.lastName?.trim() || '';
+
+    if (firstName || lastName) {
+      return `${firstName} ${lastName}`.trim();
+    }
+
+    // Try employeeNumber as fallback
+    if (employee.employeeNumber) {
+      return `Employee #${employee.employeeNumber}`;
+    }
+
+    return 'Unknown Employee';
+  };
+
+  const getEmployeeDepartment = (employee: any): string => {
+    if (!employee) return '';
+    if (typeof employee === 'string') return '';
+
+    const dept = employee.primaryDepartmentId;
+    if (!dept) return '';
+
+    if (typeof dept === 'object' && dept.name) {
+      return dept.name;
+    }
+
+    return '';
   };
 
   const renderReportTable = () => {
@@ -287,14 +409,14 @@ export default function ReportsTab() {
                     <Typography sx={{ color: '#64748b' }}>{new Date(row.date).toLocaleDateString()}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={formatMinutesToHours(row.totalWorkMinutes || 0)}
                       size="small"
                       sx={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6' }}
                     />
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={formatMinutesToHours(row.overtimeMinutes || 0)}
                       size="small"
                       sx={{ background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', fontWeight: 600 }}
@@ -326,7 +448,7 @@ export default function ReportsTab() {
                     <Typography sx={{ color: '#64748b' }}>{new Date(row.date).toLocaleDateString()}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={`${row.lateMinutes || 0} min`}
                       size="small"
                       sx={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', fontWeight: 600 }}
@@ -359,7 +481,7 @@ export default function ReportsTab() {
                     <Typography sx={{ color: '#64748b' }}>{new Date(row.date).toLocaleDateString()}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={formatMinutesToHours(row.totalWorkMinutes || 0)}
                       size="small"
                       sx={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10B981' }}
@@ -399,20 +521,20 @@ export default function ReportsTab() {
               {reportData.data.map((row, index) => (
                 <TableRow key={index} sx={{ '&:hover': { background: 'rgba(139, 92, 246, 0.04)' } }}>
                   <TableCell>
-                    <Typography sx={{ fontWeight: 600, color: '#1e293b' }}>{getEmployeeName(row.employeeId)}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: '#1e293b' }}>{getEmployeeName(row.employee)}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={row.type || 'N/A'}
                       size="small"
                       sx={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}
                     />
                   </TableCell>
                   <TableCell>
-                    <Chip 
+                    <Chip
                       label={row.status || 'N/A'}
                       size="small"
-                      sx={{ 
+                      sx={{
                         background: row.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
                         color: row.status === 'APPROVED' ? '#10B981' : '#F59E0B'
                       }}
@@ -536,7 +658,24 @@ export default function ReportsTab() {
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Employee Type</InputLabel>
+              <Select
+                value={filters.employeeType}
+                onChange={(e) => setFilters({ ...filters, employeeType: e.target.value })}
+                label="Employee Type"
+              >
+                <MenuItem value="">All Types</MenuItem>
+                {EMPLOYEE_TYPES.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <FormControl fullWidth size="small">
               <InputLabel>Employee</InputLabel>
               <Select
@@ -545,11 +684,20 @@ export default function ReportsTab() {
                 label="Employee"
               >
                 <MenuItem value="">All Employees</MenuItem>
-                {employees.map((emp) => (
-                  <MenuItem key={emp._id} value={emp._id}>
-                    {emp.fullName || `${emp.firstName} ${emp.lastName}`} ({emp.employeeNumber})
-                  </MenuItem>
-                ))}
+                {employees
+                  .filter(emp => !filters.employeeType || emp.contractType === filters.employeeType)
+                  .filter(emp => {
+                    if (!filters.departmentId) return true;
+                    const deptId = typeof emp.primaryDepartmentId === 'object'
+                      ? emp.primaryDepartmentId?._id
+                      : emp.primaryDepartmentId;
+                    return deptId === filters.departmentId;
+                  })
+                  .map((emp) => (
+                    <MenuItem key={emp._id} value={emp._id}>
+                      {emp.fullName || `${emp.firstName} ${emp.lastName}`} ({emp.employeeNumber})
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
           </Grid>

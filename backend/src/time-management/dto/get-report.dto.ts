@@ -19,4 +19,9 @@ export class GetReportDto {
     @IsString()
     @IsOptional()
     departmentId?: string;
+
+    @ApiProperty({ example: 'FULL_TIME', description: 'Optional employee type/contract type to filter by (FULL_TIME, PART_TIME, CONTRACT, INTERN, PROBATION)', required: false })
+    @IsString()
+    @IsOptional()
+    employeeType?: string;
 }

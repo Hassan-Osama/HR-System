@@ -28,10 +28,14 @@ const tabs = [
 
 export default function TimeManagementPage() {
   const [activeTab, setActiveTab] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Update time every second for live clock
+  // Set mounted flag and initialize time on client-side only
   useEffect(() => {
+    setMounted(true);
+    setCurrentTime(new Date());
+
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -128,12 +132,12 @@ export default function TimeManagementPage() {
                 </Typography>
               </Box>
             </Box>
-            
+
             {/* Live Clock Display */}
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 2,
                 bgcolor: 'white',
                 px: 3,
@@ -147,22 +151,22 @@ export default function TimeManagementPage() {
                 <Typography variant="caption" sx={{ color: '#94A3B8', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Current Time
                 </Typography>
-                <Typography 
+                <Typography
                   className="tm-time-display"
-                  sx={{ 
-                    fontWeight: 700, 
-                    fontSize: '1.5rem', 
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '1.5rem',
                     color: '#1E293B',
                     lineHeight: 1,
                   }}
                 >
-                  {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  {currentTime ? currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--:--'}
                 </Typography>
               </Box>
-              <Box sx={{ 
-                width: 44, 
-                height: 44, 
-                borderRadius: 2, 
+              <Box sx={{
+                width: 44,
+                height: 44,
+                borderRadius: 2,
                 background: `${currentColor}15`,
                 display: 'flex',
                 alignItems: 'center',
@@ -244,12 +248,12 @@ export default function TimeManagementPage() {
                             boxShadow: isActive ? `0 4px 12px ${tab.color}40` : 'none',
                           }}
                         >
-                          <Icon 
-                            size={18} 
-                            style={{ 
+                          <Icon
+                            size={18}
+                            style={{
                               color: isActive ? 'white' : tab.color,
                               transition: 'color 0.3s ease',
-                            }} 
+                            }}
                           />
                         </Box>
                         <span>{tab.label}</span>
@@ -263,8 +267,8 @@ export default function TimeManagementPage() {
         </Paper>
 
         {/* Tab Content with smooth transition */}
-        <Box 
-          key={activeTab} 
+        <Box
+          key={activeTab}
           className="tm-fade-in-up"
           sx={{
             '& > *': {

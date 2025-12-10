@@ -789,7 +789,7 @@ export class TimeManagementService {
       .find(query)
       .populate({
         path: 'employeeId',
-        select: 'firstName lastName fullName employeeNumber primaryDepartmentId',
+        select: 'firstName lastName fullName employeeNumber primaryDepartmentId contractType',
         populate: { path: 'primaryDepartmentId', select: 'name' }
       })
       .sort({ date: -1 })
@@ -801,6 +801,13 @@ export class TimeManagementService {
       filteredRecords = records.filter((record: any) => {
         const deptId = record.employeeId?.primaryDepartmentId?._id || record.employeeId?.primaryDepartmentId;
         return deptId?.toString() === dto.departmentId;
+      });
+    }
+
+    // Filter by employee type if specified
+    if (dto.employeeType) {
+      filteredRecords = filteredRecords.filter((record: any) => {
+        return record.employeeId?.contractType === dto.employeeType;
       });
     }
 
@@ -836,8 +843,8 @@ export class TimeManagementService {
         employeesWithOvertime: uniqueEmployees,
         overtimeThresholdMinutes: overtimeThreshold,
         multiplier,
-        averageOvertimePerRecord: overtimeData.length > 0 
-          ? Math.round(totalOvertimeMinutes / overtimeData.length) 
+        averageOvertimePerRecord: overtimeData.length > 0
+          ? Math.round(totalOvertimeMinutes / overtimeData.length)
           : 0,
       },
       data: overtimeData,
@@ -862,7 +869,7 @@ export class TimeManagementService {
     }
 
     console.log('[DEBUG] getLatenessReport query:', JSON.stringify(query, null, 2));
-    
+
     // Debug: count all records first
     const totalCount = await this.attendanceRecordModel.countDocuments({});
     const lateCount = await this.attendanceRecordModel.countDocuments({ isLate: true });
@@ -873,12 +880,12 @@ export class TimeManagementService {
       .find(query)
       .populate({
         path: 'employeeId',
-        select: 'firstName lastName fullName employeeNumber primaryDepartmentId',
+        select: 'firstName lastName fullName employeeNumber primaryDepartmentId contractType',
         populate: { path: 'primaryDepartmentId', select: 'name' }
       })
       .sort({ date: -1 })
       .exec();
-    
+
     console.log('[DEBUG] Records found by query:', records.length);
 
     // Filter by department if specified
@@ -887,6 +894,13 @@ export class TimeManagementService {
       filteredRecords = records.filter((record: any) => {
         const deptId = record.employeeId?.primaryDepartmentId?._id || record.employeeId?.primaryDepartmentId;
         return deptId?.toString() === dto.departmentId;
+      });
+    }
+
+    // Filter by employee type if specified
+    if (dto.employeeType) {
+      filteredRecords = filteredRecords.filter((record: any) => {
+        return record.employeeId?.contractType === dto.employeeType;
       });
     }
 
@@ -922,8 +936,8 @@ export class TimeManagementService {
         gracePeriodMinutes: gracePeriod,
         beyondGraceCount,
         withinGraceCount: latenessData.length - beyondGraceCount,
-        averageLateMinutes: latenessData.length > 0 
-          ? Math.round(totalLateMinutes / latenessData.length) 
+        averageLateMinutes: latenessData.length > 0
+          ? Math.round(totalLateMinutes / latenessData.length)
           : 0,
       },
       data: latenessData,
@@ -967,7 +981,7 @@ export class TimeManagementService {
       .find(exceptionQuery)
       .populate({
         path: 'employeeId',
-        select: 'firstName lastName fullName employeeNumber primaryDepartmentId',
+        select: 'firstName lastName fullName employeeNumber primaryDepartmentId contractType',
         populate: { path: 'primaryDepartmentId', select: 'name' }
       })
       .populate('attendanceRecordId', 'date')
@@ -981,6 +995,13 @@ export class TimeManagementService {
       filteredExceptions = exceptions.filter((exc: any) => {
         const deptId = exc.employeeId?.primaryDepartmentId?._id || exc.employeeId?.primaryDepartmentId;
         return deptId?.toString() === dto.departmentId;
+      });
+    }
+
+    // Filter by employee type if specified
+    if (dto.employeeType) {
+      filteredExceptions = filteredExceptions.filter((exc: any) => {
+        return exc.employeeId?.contractType === dto.employeeType;
       });
     }
 
@@ -1039,7 +1060,7 @@ export class TimeManagementService {
       .find(query)
       .populate({
         path: 'employeeId',
-        select: 'firstName lastName fullName employeeNumber primaryDepartmentId',
+        select: 'firstName lastName fullName employeeNumber primaryDepartmentId contractType',
         populate: { path: 'primaryDepartmentId', select: 'name' }
       })
       .sort({ date: -1 })
@@ -1054,6 +1075,13 @@ export class TimeManagementService {
       });
     }
 
+    // Filter by employee type if specified
+    if (dto.employeeType) {
+      filteredRecords = filteredRecords.filter((record: any) => {
+        return record.employeeId?.contractType === dto.employeeType;
+      });
+    }
+
     // Summary statistics
     const totalWorkMinutes = filteredRecords.reduce((sum, r) => sum + (r.totalWorkMinutes || 0), 0);
     const lateCount = filteredRecords.filter(r => r.isLate).length;
@@ -1062,8 +1090,8 @@ export class TimeManagementService {
     const uniqueEmployees = new Set(filteredRecords.map((r: any) => r.employeeId?._id?.toString())).size;
 
     // Calculate averages
-    const avgWorkMinutes = filteredRecords.length > 0 
-      ? Math.round(totalWorkMinutes / filteredRecords.length) 
+    const avgWorkMinutes = filteredRecords.length > 0
+      ? Math.round(totalWorkMinutes / filteredRecords.length)
       : 0;
     const totalLateMinutes = filteredRecords.reduce((sum, r) => sum + (r.lateMinutes || 0), 0);
 
@@ -1082,14 +1110,14 @@ export class TimeManagementService {
         averageWorkMinutes: avgWorkMinutes,
         averageWorkHours: Math.round(avgWorkMinutes / 60 * 100) / 100,
         lateCount,
-        latePercentage: filteredRecords.length > 0 
-          ? Math.round(lateCount / filteredRecords.length * 100) 
+        latePercentage: filteredRecords.length > 0
+          ? Math.round(lateCount / filteredRecords.length * 100)
           : 0,
         totalLateMinutes,
         missedPunchCount,
         onTimeCount,
-        onTimePercentage: filteredRecords.length > 0 
-          ? Math.round(onTimeCount / filteredRecords.length * 100) 
+        onTimePercentage: filteredRecords.length > 0
+          ? Math.round(onTimeCount / filteredRecords.length * 100)
           : 0,
         overtimeRecords: overtimeRecords.length,
       },
@@ -1161,7 +1189,7 @@ export class TimeManagementService {
 
     const penaltyMinutes = latenessMinutes - gracePeriod;
     const maxDeduction = activeRule.maxDeductionMinutes || 0;
-    
+
     return maxDeduction > 0 ? Math.min(penaltyMinutes, maxDeduction) : penaltyMinutes;
   }
 
@@ -1209,7 +1237,7 @@ export class TimeManagementService {
 
     for (const record of lateRecords) {
       const employeeId = record._id.toString();
-      
+
       // Check if employee was on leave for any of those days
       let actualLateCount = 0;
       const validRecordIds: string[] = [];
@@ -1217,7 +1245,7 @@ export class TimeManagementService {
       for (let i = 0; i < record.dates.length; i++) {
         const isOnLeave = await this.isEmployeeOnLeave(employeeId, record.dates[i]);
         const isHoliday = await this.isHoliday(record.dates[i]);
-        
+
         if (!isOnLeave && !isHoliday) {
           actualLateCount++;
           validRecordIds.push(record.recordIds[i].toString());
@@ -1370,7 +1398,7 @@ export class TimeManagementService {
       await request.save();
 
       const employeeId = request.employeeId?.toString() || (request.employeeId as any)?._id?.toString();
-      
+
       // Get manager for escalation
       const managerId = employeeId ? await this.orgStructureIntegration.getEmployeeManager(employeeId) : null;
 
@@ -1466,7 +1494,7 @@ export class TimeManagementService {
     for (const shift of expiringShifts) {
       const employee = shift.employeeId as any;
       const shiftType = shift.shiftTypeId as any;
-      
+
       if (employee?._id && shift.endDate) {
         await this.notificationIntegration.notifyShiftExpiry(
           employee._id.toString(),
