@@ -7,6 +7,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import theme from '@/theme/theme';
 import { Inter } from 'next/font/google';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <AuthProvider>{children}</AuthProvider>
+            <Toaster />
           </ThemeProvider>
         </QueryClientProvider>
       </body>

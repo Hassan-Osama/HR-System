@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcryptjs';
+import * as dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { EmployeeProfileSchema } from '../employee-profile/models/employee-profile.schema';
 import { EmployeeSystemRoleSchema } from '../employee-profile/models/employee-system-role.schema';
@@ -6,8 +7,11 @@ import { DepartmentSchema } from '../organization-structure/models/department.sc
 import { PositionSchema } from '../organization-structure/models/position.schema';
 import { PositionAssignmentSchema } from '../organization-structure/models/position-assignment.schema';
 
+// Load environment variables
+dotenv.config();
+
 async function seedRoles() {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/hr-system';
+  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/hr-system';
 
   try {
     // Connect to MongoDB

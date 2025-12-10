@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Typography, Box, Grid, Card, CardContent, Avatar, Paper, List, ListItem, ListItemText, ListItemAvatar, Divider, Chip } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { People, Assignment, Assessment, PersonSearch, TrendingUp, Groups, Business, Work, Notifications } from '@mui/icons-material';
+import { People, Assignment, Assessment, PersonSearch, TrendingUp, Groups, Business, Work, Notifications, Schedule } from '@mui/icons-material';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { notificationsService } from '@/services/notificationsService';
@@ -95,6 +95,14 @@ export default function DashboardPage() {
             icon: <TrendingUp />,
             href: '/dashboard/performance',
             color: '#EF4444', // Red
+            visible: true,
+        },
+        {
+            title: 'Time Management',
+            description: 'Manage shifts, schedules, and holidays',
+            icon: <Schedule />,
+            href: '/time-management',
+            color: '#8B5CF6', // Violet
             visible: true,
         },
     ];
