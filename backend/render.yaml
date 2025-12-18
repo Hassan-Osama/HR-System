@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: hr-system-backend
+    env: node
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
