@@ -7,6 +7,7 @@ import { EmployeeProfile, EmployeeProfileDocument } from '../employee-profile/mo
 import { EmployeeSystemRole, EmployeeSystemRoleDocument } from '../employee-profile/models/employee-system-role.schema';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { SystemRole } from '../employee-profile/enums/employee-profile.enums';
 
 @Injectable()
 export class AuthService {
@@ -39,13 +40,14 @@ export class AuthService {
 
     // Get role information
     const accessProfile = employee.accessProfileId as any;
-    const roleName = accessProfile?.roles?.[0] || 'DEPARTMENT_EMPLOYEE';
+    const roleName = accessProfile?.roles?.[0] || SystemRole.DEPARTMENT_EMPLOYEE;
 
     // Create JWT payload
     const payload = {
       sub: employee._id.toString(),
       email: employee.workEmail || loginDto.email,
       role: roleName,
+      roles: [roleName],
       fullName: employee.fullName || `${employee.firstName} ${employee.lastName}`,
     };
 

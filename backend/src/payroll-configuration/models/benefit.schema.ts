@@ -3,12 +3,15 @@ import mongoose, { HydratedDocument } from 'mongoose';
 import { EmployeeProfile as Employee } from '../../employee-profile/models/employee-profile.schema';
 import { ConfigStatus } from '../enums/payroll-configuration-enums';
 
-export type payTypeDocument = HydratedDocument<payType>;
+export type benefitDocument = HydratedDocument<benefit>;
 
 @Schema({ timestamps: true })
-export class payType {
+export class benefit {
   @Prop({ required: true, unique: true })
-  type: string;
+  name: string; // e.g. "End of Service", "Gratuity"
+
+  @Prop()
+  description?: string;
 
   @Prop({ required: true, min: 0 })
   amount: number;
@@ -31,4 +34,4 @@ export class payType {
   approvedAt?: Date;
 }
 
-export const payTypeSchema = SchemaFactory.createForClass(payType);
+export const benefitSchema = SchemaFactory.createForClass(benefit);

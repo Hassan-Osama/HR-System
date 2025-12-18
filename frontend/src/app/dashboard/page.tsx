@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Typography, Box, Grid, Card, CardContent, Avatar, Paper, List, ListItem, ListItemText, ListItemAvatar, Divider, Chip } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { People, Assignment, Assessment, PersonSearch, TrendingUp, Groups, Business, Work, Notifications, Schedule } from '@mui/icons-material';
+import { People, Assignment, Assessment, PersonSearch, TrendingUp, Groups, Business, Work, Notifications, Schedule, Payments } from '@mui/icons-material';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { notificationsService } from '@/services/notificationsService';
@@ -104,6 +104,14 @@ export default function DashboardPage() {
             href: '/time-management',
             color: '#8B5CF6', // Violet
             visible: true,
+        },
+        {
+            title: 'Payroll Configuration',
+            description: 'Configure company payroll, tax rules, and benefits',
+            icon: <Payments />,
+            href: '/dashboard/payroll',
+            color: '#14B8A6', // Teal
+            visible: isSystemAdmin || isPayrollManager || isHRManager,
         },
     ];
 

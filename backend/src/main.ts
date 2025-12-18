@@ -1,22 +1,34 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
+
+console.log('🔍 Environment Check:');
+console.log('PORT:', process.env.PORT || '3001 (default)');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ?
+  process.env.MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@') :
+  'NOT SET - using default');
+console.log('JWT_SECRET:', process.env.JWT_SECRET ? '✓ SET' : '⚠ NOT SET');
+
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.enableCors();
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  const app = await NestFactory.create(AppModule);
 
-  // Serve static files from uploads directory
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
+  app.enableCors({
+    origin: true,
+    credentials: true,
   });
 
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-  await app.listen(port);
-  console.log(`🚀 Server is running on http://localhost:${port}`);
-}
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // strips unknown fields (GOOD)
+      transform: true, // converts string -> number if DTO types are number
+      transformOptions: { enableImplicitConversion: true },
+      forbidNonWhitelisted: false,
+    }),
+  );
 
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`🚀 Backend server is running on http://localhost:${port}`);
+}
 bootstrap();
