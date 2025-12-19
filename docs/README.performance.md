@@ -1,108 +1,110 @@
 # Performance Subsystem
 
+## Seed Files
+
+- src/seeds/performance.seed.ts (entry point for Performance data)
+
 ## Models
-
-### AppraisalCycle
-
-| Field | Type | Description | Seeded? | Seed Value(s) |
-| --- | --- | --- | --- | --- |
-| name | string | Cycle name | Yes | 2025 Annual Review Cycle |
-| description | string | Description | Yes | Performance review for the year 2025 |
-| cycleType | enum(AppraisalTemplateType) | Cycle type | Yes | ANNUAL |
-| startDate | Date | Start date | Yes | 2025-01-01 |
-| endDate | Date | End date | Yes | 2025-12-31 |
-| templateAssignments | array | Template assignments | Yes | [{ templateId: template._id, departmentIds: [hrDept, engDept, salesDept] }] |
-| status | enum(AppraisalCycleStatus) | Cycle status | Yes | PLANNED |
-| managerDueDate | Date | Manager due date | No | Not found in seed files |
-| employeeAcknowledgementDueDate | Date | Employee ack due | No | Not found in seed files |
-| publishedAt | Date | Publish time | No | Not found in seed files |
-| closedAt | Date | Close time | No | Not found in seed files |
-| archivedAt | Date | Archive time | No | Not found in seed files |
 
 ### AppraisalTemplate
 
 | Field | Type | Description | Seeded? | Seed Value(s) |
 | --- | --- | --- | --- | --- |
-| name | string | Template name | Yes | Annual Review Template 2025 |
-| description | string | Description | Yes | Standard annual review template |
-| templateType | enum(AppraisalTemplateType) | Template type | Yes | ANNUAL |
-| ratingScale | RatingScaleDefinition | Rating scale | Yes | type: FIVE_POINT; min:1; max:5; step:1; labels: [Poor, Fair, Good, Very Good, Excellent] |
-| criteria | EvaluationCriterion[] | Criteria list | Yes | integrity (weight 30, required); teamwork (30, required); goal_achievement (40, required) |
-| instructions | string | Instructions | Yes | Complete each criterion with ratings and narrative comments. |
-| isActive | boolean | Active flag | Yes | true |
-| applicableDepartmentIds | ObjectId[] | Applicable departments | No | Not found in seed files |
-| applicablePositionIds | ObjectId[] | Applicable positions | No | Not found in seed files |
+| name | string | Template name | ✅ | Annual Review Template 2025; Semi-Annual Review Template 2025; Probationary Review Template; Project Review Template; Ad Hoc Review Template |
+| description | string | Description | ✅ | Provided for all templates as in seed data |
+| templateType | enum(AppraisalTemplateType) | Template type | ✅ | ANNUAL; SEMI_ANNUAL; PROBATIONARY; PROJECT; AD_HOC |
+| ratingScale | RatingScaleDefinition | Rating scale | ✅ | FIVE_POINT (annual, project: min 1 max 5 step 1 labels Poor→Excellent); THREE_POINT (semi-annual, ad hoc: min 1 max 3 step 1 labels Below→Exceeds); TEN_POINT (probationary: min 1 max 10 step 1 labels 1–10) |
+| criteria | EvaluationCriterion[] | Criteria list | ✅ | Annual: integrity/teamwork/goal_achievement (30/30/40, required). Semi-annual: collaboration/delivery (50/50). Probationary: learning_curve/culture_fit (50/50). Project: delivery_quality/stakeholder_mgmt (60/40). Ad hoc: responsiveness/ownership (50/50). |
+| instructions | string | Instructions | ✅ | Present for annual template only |
+| isActive | boolean | Active flag | ✅ | true for all templates |
+| applicableDepartmentIds | ObjectId[] | Applicable departments | ❌ | Not present in seed data |
+| applicablePositionIds | ObjectId[] | Applicable positions | ❌ | Not present in seed data |
+
+### AppraisalCycle
+
+| Field | Type | Description | Seeded? | Seed Value(s) |
+| --- | --- | --- | --- | --- |
+| name | string | Cycle name | ✅ | 2025 Annual Review Cycle; 2025 Midyear Cycle; 2024 Probationary Cycle; 2023 Project Cycle |
+| description | string | Description | ✅ | As per cycle names (annual/midyear/probationary/project) |
+| cycleType | enum(AppraisalTemplateType) | Cycle type | ✅ | ANNUAL; SEMI_ANNUAL; PROBATIONARY; PROJECT |
+| startDate | Date | Start date | ✅ | 2025-01-01; 2025-06-01; 2024-02-01; 2023-03-01 |
+| endDate | Date | End date | ✅ | 2025-12-31; 2025-06-30; 2024-04-30; 2023-05-31 |
+| managerDueDate | Date | Manager due date | ❌ | Not present in seed data |
+| employeeAcknowledgementDueDate | Date | Employee ack due | ❌ | Not present in seed data |
+| templateAssignments | array | Template assignments | ✅ | Annual: annualTemplate + HR/ENG/SALES depts. Midyear: semiAnnualTemplate + ENG. Probationary: probationaryTemplate + HR. Project: projectTemplate + SALES. |
+| status | enum(AppraisalCycleStatus) | Cycle status | ✅ | PLANNED (annual); ACTIVE (midyear with publishedAt 2025-06-01); CLOSED (probationary with closedAt 2024-05-15); ARCHIVED (project with archivedAt 2024-01-10) |
+| publishedAt | Date | Publish time | ✅ | 2025-06-01 for midyear cycle |
+| closedAt | Date | Close time | ✅ | 2024-05-15 for probationary cycle |
+| archivedAt | Date | Archive time | ✅ | 2024-01-10 for project cycle |
 
 ### AppraisalAssignment
 
 | Field | Type | Description | Seeded? | Seed Value(s) |
 | --- | --- | --- | --- | --- |
-| cycleId | ObjectId | Cycle ref | Yes | cycle._id |
-| templateId | ObjectId | Template ref | Yes | template._id |
-| employeeProfileId | ObjectId | Employee ref | Yes | employees.bob._id |
-| managerProfileId | ObjectId | Manager ref | Yes | employees.alice._id |
-| departmentId | ObjectId | Department ref | Yes | departments.engDept._id |
-| positionId | ObjectId | Position ref | Yes | positions.softwareEngPos._id |
-| status | enum(AppraisalAssignmentStatus) | Assignment status | Yes | IN_PROGRESS (initial), later PUBLISHED after update |
-| assignedAt | Date | Assigned date | Yes | 2025-01-15 |
-| dueDate | Date | Due date | Yes | 2025-02-28 |
-| submittedAt | Date | Submission time | No | Not found in seed files |
-| publishedAt | Date | Publish time | No | Not found in seed files |
-| latestAppraisalId | ObjectId | Latest appraisal record | No | Not found in initial seed (set in update after record creation) |
+| cycleId | ObjectId | Cycle ref | ✅ | References annual/midyear/probationary/project cycles as created |
+| templateId | ObjectId | Template ref | ✅ | References matching templates |
+| employeeProfileId | ObjectId | Employee ref | ✅ | alice, bob, charlie as per entries |
+| managerProfileId | ObjectId | Manager ref | ✅ | alice or bob as per entries |
+| departmentId | ObjectId | Department ref | ✅ | HR/ENG/SALES |
+| positionId | ObjectId | Position ref | ✅ | hrManagerPos, softwareEngPos, salesRepPos |
+| status | enum(AppraisalAssignmentStatus) | Assignment status | ✅ | IN_PROGRESS (3 annual); NOT_STARTED (midyear/bob); SUBMITTED (probationary/alice); ACKNOWLEDGED (project/charlie); annual assignments updated to PUBLISHED after record linkage |
+| assignedAt | Date | Assigned date | ✅ | Provided for all entries |
+| dueDate | Date | Due date | ✅ | Provided for all entries |
+| submittedAt | Date | Submission time | ✅ | Provided for probationary and project assignments |
+| publishedAt | Date | Publish time | ✅ | Provided for project assignment (2023-05-20) |
+| latestAppraisalId | ObjectId | Latest appraisal record | ✅ | Set for annual assignments during post-create update; not set for additional assignments |
 
 ### AppraisalRecord
 
 | Field | Type | Description | Seeded? | Seed Value(s) |
 | --- | --- | --- | --- | --- |
-| assignmentId | ObjectId | Assignment ref | Yes | assignment._id |
-| cycleId | ObjectId | Cycle ref | Yes | cycle._id |
-| templateId | ObjectId | Template ref | Yes | template._id |
-| employeeProfileId | ObjectId | Employee ref | Yes | employees.bob._id |
-| managerProfileId | ObjectId | Manager ref | Yes | employees.alice._id |
-| ratings | RatingEntry[] | Ratings list | Yes | integrity:4 (Very Good, weighted 1.2); teamwork:5 (Excellent, weighted 1.5); goal_achievement:4 (Very Good, weighted 1.6) |
-| totalScore | number | Total score | Yes | 4.3 |
-| overallRatingLabel | string | Overall rating | Yes | Exceeds Expectations |
-| managerSummary | string | Manager summary | Yes | Consistently delivers high-quality work. |
-| strengths | string | Strengths | Yes | Ownership, mentoring junior devs |
-| improvementAreas | string | Improvement areas | Yes | Document more design decisions |
-| status | enum(AppraisalRecordStatus) | Record status | Yes | HR_PUBLISHED |
-| managerSubmittedAt | Date | Manager submit time | Yes | 2025-03-01 |
-| hrPublishedAt | Date | HR publish time | Yes | 2025-03-05 |
-| publishedByEmployeeId | ObjectId | Publisher | Yes | employees.alice._id |
-| employeeViewedAt | Date | Employee viewed | Yes | 2025-03-06 |
-| employeeAcknowledgedAt | Date | Employee acknowledged | Yes | 2025-03-07 |
-| employeeAcknowledgementComment | string | Employee comment | No | Not found in seed files |
-| archivedAt | Date | Archive time | No | Not found in seed files |
+| assignmentId | ObjectId | Assignment ref | ✅ | Links to base and additional assignments |
+| cycleId | ObjectId | Cycle ref | ✅ | Annual, midyear, probationary, project |
+| templateId | ObjectId | Template ref | ✅ | Annual, semi-annual, probationary, project |
+| employeeProfileId | ObjectId | Employee ref | ✅ | bob, charlie, alice (varies) |
+| managerProfileId | ObjectId | Manager ref | ✅ | alice or bob |
+| ratings | RatingEntry[] | Ratings list | ✅ | Annual records have full ratings; midyear record empty; probationary record has learning_curve:8 (Strong); project record has delivery_quality:4 (Very Good) |
+| totalScore | number | Total score | ✅ | Present for annual records (4.3, 3.3, 5); absent for others |
+| overallRatingLabel | string | Overall rating | ✅ | Present for annual records (Exceeds/Meets/Outstanding); absent for others |
+| managerSummary | string | Manager summary | ✅ | Present for annual records; absent for others |
+| strengths | string | Strengths | ✅ | Present for annual records; absent for others |
+| improvementAreas | string | Improvement areas | ✅ | Present for annual records; absent for others |
+| status | enum(AppraisalRecordStatus) | Record status | ✅ | HR_PUBLISHED (annual records); DRAFT (midyear); MANAGER_SUBMITTED (probationary); ARCHIVED (project) |
+| managerSubmittedAt | Date | Manager submit time | ✅ | Present for annual and probationary records |
+| hrPublishedAt | Date | HR publish time | ✅ | Present for annual records |
+| publishedByEmployeeId | ObjectId | Publisher | ✅ | Present for annual records |
+| employeeViewedAt | Date | Employee viewed | ✅ | Present for annual records |
+| employeeAcknowledgedAt | Date | Employee acknowledged | ✅ | Present for annual records |
+| employeeAcknowledgementComment | string | Employee comment | ❌ | Not present in seed data |
+| archivedAt | Date | Archive time | ✅ | Present for project record (2024-01-10) |
 
 ### AppraisalDispute
 
 | Field | Type | Description | Seeded? | Seed Value(s) |
 | --- | --- | --- | --- | --- |
-| _id | ObjectId | Dispute id | Yes | Generated ObjectId |
-| appraisalId | ObjectId | Appraisal ref | Yes | record._id |
-| assignmentId | ObjectId | Assignment ref | Yes | assignment._id |
-| cycleId | ObjectId | Cycle ref | Yes | cycle._id |
-| raisedByEmployeeId | ObjectId | Raised by | Yes | employees.bob._id |
-| reason | string | Reason | Yes | Clarify weighting for goal achievement |
-| details | string | Details | Yes | Requesting review of weight distribution. |
-| status | enum(AppraisalDisputeStatus) | Status | Yes | OPEN |
-| assignedReviewerEmployeeId | ObjectId | Reviewer | Yes | employees.alice._id |
-| submittedAt | Date | Submission time | No | Not found in seed files (uses default) |
-| resolutionSummary | string | Resolution summary | No | Not found in seed files |
-| resolvedAt | Date | Resolution time | No | Not found in seed files |
-| resolvedByEmployeeId | ObjectId | Resolver | No | Not found in seed files |
+| _id | ObjectId | Dispute id | ✅ | Generated per record |
+| appraisalId | ObjectId | Appraisal ref | ✅ | References base and additional records |
+| assignmentId | ObjectId | Assignment ref | ✅ | References related assignments |
+| cycleId | ObjectId | Cycle ref | ✅ | Annual, closed, archived cycles covered |
+| raisedByEmployeeId | ObjectId | Raised by | ✅ | bob, alice, charlie |
+| reason | string | Reason | ✅ | Clarify weighting; Score clarification; Archived decision dispute; Disagree with teamwork score |
+| details | string | Details | ✅ | Provided for first dispute only |
+| status | enum(AppraisalDisputeStatus) | Status | ✅ | OPEN; UNDER_REVIEW; ADJUSTED; REJECTED |
+| assignedReviewerEmployeeId | ObjectId | Reviewer | ✅ | Present for OPEN and UNDER_REVIEW disputes |
+| submittedAt | Date | Submission time | ✅ | Defaults at creation (not explicitly set) |
+| resolutionSummary | string | Resolution summary | ✅ | Provided for ADJUSTED dispute |
+| resolvedAt | Date | Resolution time | ✅ | Provided for ADJUSTED (2024-02-01) and REJECTED (2025-03-10) disputes |
+| resolvedByEmployeeId | ObjectId | Resolver | ✅ | Provided for ADJUSTED and REJECTED disputes |
 
 ## Fields Without Seed Values
 
-- AppraisalCycle: managerDueDate, employeeAcknowledgementDueDate, publishedAt, closedAt, archivedAt.
 - AppraisalTemplate: applicableDepartmentIds, applicablePositionIds.
-- AppraisalAssignment: submittedAt, publishedAt, latestAppraisalId (set later by update but not initially seeded).
-- AppraisalRecord: employeeAcknowledgementComment, archivedAt.
-- AppraisalDispute: submittedAt, resolutionSummary, resolvedAt, resolvedByEmployeeId.
+- AppraisalCycle: managerDueDate, employeeAcknowledgementDueDate.
+- AppraisalAssignment: latestAppraisalId is not set for additional (non-annual) assignments.
+- AppraisalRecord: employeeAcknowledgementComment; totalScore/overallRatingLabel/managerSummary/strengths/improvementAreas are absent for midyear/probationary/project records by design.
 
 ## Seeding Summary
 
-- Total models: 5
-- Total seeded fields: 50
-- Total non-seeded fields: 16
-- Notes/assumptions: ObjectIds generated during inserts; assignment.latestAppraisalId is set via update after record creation, not part of initial create payload.
+- Seed files: src/seeds/performance.seed.ts
+- Models seeded: AppraisalTemplate, AppraisalCycle, AppraisalAssignment, AppraisalRecord, AppraisalDispute.
+- Enum coverage: All performance-related enum values are represented in seeded records (see PERFORMANCE_ENUM_COVERAGE_REPORT.md).
