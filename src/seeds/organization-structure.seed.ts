@@ -43,6 +43,27 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     isActive: true,
   });
 
+  const learningDept = await DepartmentModel.create({
+    code: 'LND-001',
+    name: 'Learning and Development',
+    description: 'Learning, training, and academic support',
+    isActive: true,
+  });
+
+  const financeDept = await DepartmentModel.create({
+    code: 'FIN-001',
+    name: 'Finance',
+    description: 'Finance and accounting operations',
+    isActive: true,
+  });
+
+  const libraryDept = await DepartmentModel.create({
+    code: 'LIB-001',
+    name: 'Library Services',
+    description: 'Knowledge center and library operations',
+    isActive: true,
+  });
+
   const opsInactiveDept = await DepartmentModel.create({
     code: 'OPS-001-INACTIVE',
     name: 'Operations (Inactive)',
@@ -109,6 +130,38 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     isActive: true,
   });
 
+  const taPos = await PositionModel.create({
+    code: 'POS-TA',
+    title: 'TA',
+    description: 'Teaching Assistant supporting learning programs',
+    departmentId: learningDept._id,
+    isActive: true,
+  });
+
+  const laPos = await PositionModel.create({
+    code: 'POS-LA',
+    title: 'LA',
+    description: 'Learning Advisor guiding training plans',
+    departmentId: learningDept._id,
+    isActive: true,
+  });
+
+  const accountantPos = await PositionModel.create({
+    code: 'POS-ACC',
+    title: 'Accountant',
+    description: 'Handles accounting operations and reporting',
+    departmentId: financeDept._id,
+    isActive: true,
+  });
+
+  const librarianPos = await PositionModel.create({
+    code: 'POS-LIB',
+    title: 'Librarian',
+    description: 'Manages library resources and circulation',
+    departmentId: libraryDept._id,
+    isActive: true,
+  });
+
   const opsAnalystInactivePos = await PositionModel.create({
     code: 'POS-OPS-INACTIVE',
     title: 'Operations Analyst (Inactive)',
@@ -119,7 +172,15 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
   console.log('Positions seeded.');
 
   return {
-    departments: { hrDept, engDept, salesDept, opsInactiveDept },
+    departments: {
+      hrDept,
+      engDept,
+      salesDept,
+      learningDept,
+      financeDept,
+      libraryDept,
+      opsInactiveDept,
+    },
     positions: {
       hrManagerPos,
       hrGeneralistPos,
@@ -128,6 +189,10 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
       seniorSoftwareEngPos,
       salesRepPos,
       salesLeadPos,
+      taPos,
+      laPos,
+      accountantPos,
+      librarianPos,
       opsAnalystInactivePos,
     },
   };
@@ -165,6 +230,34 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
     positionId: positions.salesRepPos._id,
     departmentId: departments.salesDept._id,
     startDate: new Date('2022-03-10'),
+  });
+
+  await PositionAssignmentModel.create({
+    employeeProfileId: employees.tariq._id,
+    positionId: positions.taPos._id,
+    departmentId: departments.learningDept._id,
+    startDate: new Date('2025-04-05'),
+  });
+
+  await PositionAssignmentModel.create({
+    employeeProfileId: employees.laila._id,
+    positionId: positions.laPos._id,
+    departmentId: departments.learningDept._id,
+    startDate: new Date('2025-04-10'),
+  });
+
+  await PositionAssignmentModel.create({
+    employeeProfileId: employees.amir._id,
+    positionId: positions.accountantPos._id,
+    departmentId: departments.financeDept._id,
+    startDate: new Date('2025-04-15'),
+  });
+
+  await PositionAssignmentModel.create({
+    employeeProfileId: employees.salma._id,
+    positionId: positions.librarianPos._id,
+    departmentId: departments.libraryDept._id,
+    startDate: new Date('2025-04-20'),
   });
   console.log('Position Assignments seeded.');
 

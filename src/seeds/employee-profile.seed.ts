@@ -19,6 +19,10 @@ type SeedDepartments = {
   hrDept: SeedRef;
   engDept: SeedRef;
   salesDept: SeedRef;
+  learningDept: SeedRef;
+  financeDept: SeedRef;
+  libraryDept: SeedRef;
+  opsInactiveDept: SeedRef;
 };
 type SeedPositions = {
   hrManagerPos: SeedRef;
@@ -28,6 +32,11 @@ type SeedPositions = {
   salesRepPos: SeedRef;
   seniorSoftwareEngPos: SeedRef;
   salesLeadPos: SeedRef;
+  taPos: SeedRef;
+  laPos: SeedRef;
+  accountantPos: SeedRef;
+  librarianPos: SeedRef;
+  opsAnalystInactivePos: SeedRef;
 };
 
 export async function seedEmployeeProfile(
@@ -358,6 +367,86 @@ export async function seedEmployeeProfile(
     primaryPositionId: positions.salesLeadPos._id,
     primaryDepartmentId: departments.salesDept._id,
   });
+
+  const tariq = await EmployeeProfileModel.create({
+    firstName: 'Tariq',
+    lastName: 'Adel',
+    fullName: 'Tariq Adel',
+    nationalId: 'NAT-TARIQ-016',
+    password: 'password123',
+    employeeNumber: 'EMP-016',
+    dateOfHire: new Date('2025-04-05'),
+    workEmail: 'tariq.ta@company.com',
+    bankName: 'First National Bank',
+    bankAccountNumber: 'FNB-016-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.MALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.taPos._id,
+    primaryDepartmentId: departments.learningDept._id,
+  });
+
+  const laila = await EmployeeProfileModel.create({
+    firstName: 'Laila',
+    lastName: 'Abbas',
+    fullName: 'Laila Abbas',
+    nationalId: 'NAT-LAILA-017',
+    password: 'password123',
+    employeeNumber: 'EMP-017',
+    dateOfHire: new Date('2025-04-10'),
+    workEmail: 'laila.la@company.com',
+    bankName: 'Metro Credit Union',
+    bankAccountNumber: 'MCU-017-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.FEMALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.laPos._id,
+    primaryDepartmentId: departments.learningDept._id,
+  });
+
+  const amir = await EmployeeProfileModel.create({
+    firstName: 'Amir',
+    lastName: 'Nabil',
+    fullName: 'Amir Nabil',
+    nationalId: 'NAT-AMIR-018',
+    password: 'password123',
+    employeeNumber: 'EMP-018',
+    dateOfHire: new Date('2025-04-15'),
+    workEmail: 'amir.accountant@company.com',
+    bankName: 'Capital Bank',
+    bankAccountNumber: 'CB-018-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.MALE,
+    maritalStatus: MaritalStatus.MARRIED,
+    primaryPositionId: positions.accountantPos._id,
+    primaryDepartmentId: departments.financeDept._id,
+  });
+
+  const salma = await EmployeeProfileModel.create({
+    firstName: 'Salma',
+    lastName: 'Khaled',
+    fullName: 'Salma Khaled',
+    nationalId: 'NAT-SALMA-019',
+    password: 'password123',
+    employeeNumber: 'EMP-019',
+    dateOfHire: new Date('2025-04-20'),
+    workEmail: 'salma.librarian@company.com',
+    bankName: 'Global Savings',
+    bankAccountNumber: 'GS-019-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.FEMALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.librarianPos._id,
+    primaryDepartmentId: departments.libraryDept._id,
+  });
   console.log('Employees seeded.');
 
   console.log('Assigning employee system roles...');
@@ -437,6 +526,26 @@ export async function seedEmployeeProfile(
       roles: [SystemRole.DEPARTMENT_EMPLOYEE],
       permissions: ['org.read'],
     },
+    {
+      employeeProfileId: tariq._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
+    },
+    {
+      employeeProfileId: laila._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
+    },
+    {
+      employeeProfileId: amir._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['finance.view'],
+    },
+    {
+      employeeProfileId: salma._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
+    },
   ]);
 
   console.log('Seeding employee qualifications...');
@@ -462,5 +571,13 @@ export async function seedEmployeeProfile(
     status: ProfileChangeStatus.PENDING,
   });
 
-  return { alice, bob, charlie };
+  return {
+    alice,
+    bob,
+    charlie,
+    tariq,
+    laila,
+    amir,
+    salma,
+  };
 }

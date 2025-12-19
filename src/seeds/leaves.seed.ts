@@ -15,7 +15,15 @@ import { LeaveStatus } from '../leaves/enums/leave-status.enum';
 import { AdjustmentType } from '../leaves/enums/adjustment-type.enum';
 
 type SeedRef = { _id: mongoose.Types.ObjectId };
-type SeedEmployees = { alice: SeedRef; bob: SeedRef; charlie: SeedRef };
+type SeedEmployees = {
+  alice: SeedRef;
+  bob: SeedRef;
+  charlie: SeedRef;
+  tariq: SeedRef;
+  laila: SeedRef;
+  amir: SeedRef;
+  salma: SeedRef;
+};
 
 export async function seedLeaves(
   connection: mongoose.Connection,
@@ -63,6 +71,11 @@ export async function seedLeaves(
     name: 'Sick',
     description: 'Medical leave',
   });
+
+  const unpaidCategory = await LeaveCategoryModel.create({
+    name: 'Unpaid',
+    description: 'Unpaid leave category',
+  });
   console.log('Leave Categories seeded.');
 
   console.log('Seeding Leave Types...');
@@ -85,6 +98,16 @@ export async function seedLeaves(
     deductible: true,
     requiresAttachment: true,
     attachmentType: AttachmentType.MEDICAL,
+  });
+
+  const unpaidLeave = await LeaveTypeModel.create({
+    code: 'UL',
+    name: 'Unpaid Leave',
+    categoryId: unpaidCategory._id,
+    description: 'Unpaid leave type',
+    paid: false,
+    deductible: false,
+    requiresAttachment: false,
   });
   console.log('Leave Types seeded.');
 
@@ -181,6 +204,163 @@ export async function seedLeaves(
       },
     ],
   });
+
+  // TA (Tariq) - 4 rejected, 1 approved
+  await LeaveRequestModel.create([
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-05-01'), to: new Date('2025-05-02') },
+      durationDays: 2,
+      justification: 'Workshop support travel',
+      status: LeaveStatus.REJECTED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Rejected', decidedBy: employees.alice._id, decidedAt: new Date('2025-04-20') },
+      ],
+    },
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-06-10'), to: new Date('2025-06-10') },
+      durationDays: 1,
+      justification: 'Training conflict',
+      status: LeaveStatus.REJECTED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Rejected', decidedBy: employees.alice._id, decidedAt: new Date('2025-06-05') },
+      ],
+    },
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: sickLeave._id,
+      dates: { from: new Date('2025-07-15'), to: new Date('2025-07-16') },
+      durationDays: 2,
+      justification: 'Medical checkup',
+      status: LeaveStatus.REJECTED,
+      approvalFlow: [
+        { role: 'HR', status: 'Rejected', decidedBy: employees.bob._id, decidedAt: new Date('2025-07-10') },
+      ],
+    },
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-08-20'), to: new Date('2025-08-22') },
+      durationDays: 3,
+      justification: 'Family event',
+      status: LeaveStatus.REJECTED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Rejected', decidedBy: employees.alice._id, decidedAt: new Date('2025-08-15') },
+      ],
+    },
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-09-05'), to: new Date('2025-09-06') },
+      durationDays: 2,
+      justification: 'Professional certification prep',
+      status: LeaveStatus.APPROVED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Approved', decidedBy: employees.alice._id, decidedAt: new Date('2025-08-30') },
+      ],
+    },
+  ]);
+
+  // LA (Laila) - 3 approved
+  await LeaveRequestModel.create([
+    {
+      employeeId: employees.laila._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-05-12'), to: new Date('2025-05-13') },
+      durationDays: 2,
+      justification: 'Conference attendance',
+      status: LeaveStatus.APPROVED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Approved', decidedBy: employees.alice._id, decidedAt: new Date('2025-05-05') },
+      ],
+    },
+    {
+      employeeId: employees.laila._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-06-18'), to: new Date('2025-06-19') },
+      durationDays: 2,
+      justification: 'Family visit',
+      status: LeaveStatus.APPROVED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Approved', decidedBy: employees.alice._id, decidedAt: new Date('2025-06-10') },
+      ],
+    },
+    {
+      employeeId: employees.laila._id,
+      leaveTypeId: sickLeave._id,
+      dates: { from: new Date('2025-07-08'), to: new Date('2025-07-09') },
+      durationDays: 2,
+      justification: 'Dental procedure recovery',
+      status: LeaveStatus.APPROVED,
+      approvalFlow: [
+        { role: 'HR', status: 'Approved', decidedBy: employees.bob._id, decidedAt: new Date('2025-07-05') },
+      ],
+    },
+  ]);
+
+  // Accountant (Amir) - 2 pending, 1 approved, 1 rejected
+  await LeaveRequestModel.create([
+    {
+      employeeId: employees.amir._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-05-22'), to: new Date('2025-05-23') },
+      durationDays: 2,
+      justification: 'Quarter-end break',
+      status: LeaveStatus.PENDING,
+      approvalFlow: [
+        { role: 'Manager', status: 'Pending' },
+      ],
+    },
+    {
+      employeeId: employees.amir._id,
+      leaveTypeId: sickLeave._id,
+      dates: { from: new Date('2025-06-02'), to: new Date('2025-06-02') },
+      durationDays: 1,
+      justification: 'Clinic visit',
+      status: LeaveStatus.PENDING,
+      approvalFlow: [
+        { role: 'HR', status: 'Pending' },
+      ],
+    },
+    {
+      employeeId: employees.amir._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-07-20'), to: new Date('2025-07-22') },
+      durationDays: 3,
+      justification: 'Family vacation',
+      status: LeaveStatus.APPROVED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Approved', decidedBy: employees.alice._id, decidedAt: new Date('2025-07-10') },
+      ],
+    },
+    {
+      employeeId: employees.amir._id,
+      leaveTypeId: annualLeave._id,
+      dates: { from: new Date('2025-08-12'), to: new Date('2025-08-13') },
+      durationDays: 2,
+      justification: 'Audit support conflict',
+      status: LeaveStatus.REJECTED,
+      approvalFlow: [
+        { role: 'Manager', status: 'Rejected', decidedBy: employees.alice._id, decidedAt: new Date('2025-08-05') },
+      ],
+    },
+  ]);
+
+  // Librarian (Salma) - unpaid approved leave
+  await LeaveRequestModel.create({
+    employeeId: employees.salma._id,
+    leaveTypeId: unpaidLeave._id,
+    dates: { from: new Date('2025-09-15'), to: new Date('2025-09-17') },
+    durationDays: 3,
+    justification: 'Community event support (unpaid)',
+    status: LeaveStatus.APPROVED,
+    approvalFlow: [
+      { role: 'Manager', status: 'Approved', decidedBy: employees.alice._id, decidedAt: new Date('2025-09-05') },
+    ],
+  });
   console.log('Leave Requests seeded.');
 
   console.log('Seeding Leave Calendar...');
@@ -228,7 +408,7 @@ export async function seedLeaves(
   });
 
   return {
-    categories: { annualCategory, sickCategory },
-    types: { annualLeave, sickLeave },
+    categories: { annualCategory, sickCategory, unpaidCategory },
+    types: { annualLeave, sickLeave, unpaidLeave },
   };
 }
