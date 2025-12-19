@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 import { payGradeSchema } from '../payroll-configuration/models/payGrades.schema';
 import { allowanceSchema } from '../payroll-configuration/models/allowance.schema';
 import { payrollPolicies } from '../payroll-configuration/models/payrollPolicies.schema';
@@ -9,6 +11,7 @@ import { signingBonusSchema } from '../payroll-configuration/models/signingBonus
 import { taxRulesSchema } from '../payroll-configuration/models/taxRules.schema';
 import { terminationAndResignationBenefitsSchema } from '../payroll-configuration/models/terminationAndResignationBenefits';
 import { SchemaFactory } from '@nestjs/mongoose';
+import { PositionSchema } from '../organization-structure/models/position.schema';
 import {
   ConfigStatus,
   PolicyType,
@@ -26,6 +29,7 @@ export async function seedPayrollConfiguration(
   employees: SeedEmployees,
 ) {
   const PayGradeModel = connection.model('payGrade', payGradeSchema);
+  const PositionModel = connection.model('Position', PositionSchema);
   const AllowanceModel = connection.model('allowance', allowanceSchema);
   const PayrollPoliciesModel = connection.model(
     'payrollPolicies',
@@ -51,7 +55,6 @@ export async function seedPayrollConfiguration(
   );
 
   console.log('Clearing Payroll Configuration...');
-  await PayGradeModel.deleteMany({});
   await AllowanceModel.deleteMany({});
   await PayrollPoliciesModel.deleteMany({});
   await CompanyWideSettingsModel.deleteMany({});
@@ -69,8 +72,23 @@ export async function seedPayrollConfiguration(
   });
 
   console.log('Seeding Pay Grades...');
-  const juniorGrade = await PayGradeModel.create({
-    grade: 'Junior',
+  const ensurePayGrade = async (
+    grade: string,
+    payload: {
+      baseSalary: number;
+      grossSalary: number;
+      status: ConfigStatus;
+      createdBy?: mongoose.Types.ObjectId;
+      approvedBy?: mongoose.Types.ObjectId;
+      approvedAt?: Date;
+    },
+  ) => {
+    const existing = await PayGradeModel.findOne({ grade });
+    if (existing) return existing;
+    return PayGradeModel.create({ grade, ...payload });
+  };
+
+  const juniorGrade = await ensurePayGrade('Junior', {
     baseSalary: 8000,
     grossSalary: 11000,
     status: ConfigStatus.APPROVED,
@@ -79,8 +97,7 @@ export async function seedPayrollConfiguration(
     approvedAt: new Date(),
   });
 
-  const seniorGrade = await PayGradeModel.create({
-    grade: 'Senior',
+  const seniorGrade = await ensurePayGrade('Senior', {
     baseSalary: 15000,
     grossSalary: 18000,
     status: ConfigStatus.APPROVED,
@@ -89,18 +106,14 @@ export async function seedPayrollConfiguration(
     approvedAt: new Date(),
   });
 
-  const midGrade = await PayGradeModel.create({
-    grade: 'Mid Draft',
+  const midGrade = await ensurePayGrade('Mid Draft', {
     baseSalary: 10000,
     grossSalary: 13000,
     status: ConfigStatus.DRAFT,
     createdBy: employees.alice._id,
-    // approvedBy: employees.alice._id,
-    // approvedAt: new Date(),
   });
 
-  const internGrade = await PayGradeModel.create({
-    grade: 'Intern Rejected',
+  const internGrade = await ensurePayGrade('Intern Rejected', {
     baseSalary: 6000,
     grossSalary: 9000,
     status: ConfigStatus.REJECTED,
@@ -382,6 +395,63 @@ export async function seedPayrollConfiguration(
   });
 
   console.log('Payroll Policies seeded.');
+
+  console.log('Aligning Pay Grades with Positions...');
+  const positions = await PositionModel.find({}).lean();
+  const payGradesBefore = await PayGradeModel.countDocuments();
+  const existingPayGrades = await PayGradeModel.find({}).lean();
+
+  const template = existingPayGrades[0] || {
+    baseSalary: 8000,
+    grossSalary: 11000,
+    status: ConfigStatus.DRAFT,
+    createdBy: employees.alice?._id,
+  };
+
+  const createdPayGrades: string[] = [];
+  const renamedPayGrades: string[] = [];
+
+  for (const position of positions) {
+    const targetName = position.title;
+    const existing = existingPayGrades.find((pg) => pg.grade === targetName);
+    if (existing) {
+      continue;
+    }
+
+    const created = await PayGradeModel.findOneAndUpdate(
+      { grade: targetName },
+      {
+        $setOnInsert: {
+          baseSalary: template.baseSalary,
+          grossSalary: template.grossSalary,
+          status: template.status,
+          createdBy: template.createdBy || employees.alice?._id,
+          approvedBy: template.status === ConfigStatus.APPROVED ? template.approvedBy : undefined,
+          approvedAt: template.status === ConfigStatus.APPROVED ? template.approvedAt || new Date() : undefined,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    createdPayGrades.push(`${created.grade} -> ${position.title}`);
+  }
+
+  const payGradesAfter = await PayGradeModel.countDocuments();
+
+  const reportLines = [
+    '# PayGrade Position Sync Report',
+    `- Positions count: ${positions.length}`,
+    `- PayGrades count before: ${payGradesBefore}`,
+    `- PayGrades count after: ${payGradesAfter}`,
+    `- PayGrades renamed: ${renamedPayGrades.length ? renamedPayGrades.join(', ') : 'none'}`,
+    `- PayGrades created: ${createdPayGrades.length ? createdPayGrades.join(', ') : 'none'}`,
+  ];
+
+  writeFileSync(
+    join(process.cwd(), 'PAYGRADE_POSITION_SYNC_REPORT.md'),
+    `${reportLines.join('\n')}\n`,
+  );
+  console.log('Pay Grades aligned with Positions.');
 
   return {
     payGrades: { juniorGrade, seniorGrade, midGrade, internGrade },
