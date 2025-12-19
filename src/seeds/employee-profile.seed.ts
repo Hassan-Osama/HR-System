@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import { EmployeeProfileSchema } from '../employee-profile/models/employee-profile.schema';
 import { EmployeeSystemRoleSchema } from '../employee-profile/models/employee-system-role.schema';
 import { EmployeeProfileChangeRequestSchema } from '../employee-profile/models/ep-change-request.schema';
@@ -39,6 +40,8 @@ type SeedPositions = {
   opsAnalystInactivePos: SeedRef;
 };
 
+const SEED_PASSWORD = 'ChangeMe123';
+
 export async function seedEmployeeProfile(
   connection: mongoose.Connection,
   departments: SeedDepartments,
@@ -61,19 +64,59 @@ export async function seedEmployeeProfile(
     EmployeeQualificationSchema,
   );
 
-  console.log('Clearing Employee Profiles...');
-  await EmployeeProfileModel.deleteMany({});
+  console.log(
+    'Clearing Employee supporting collections (roles/requests/quals)...',
+  );
   await EmployeeSystemRoleModel.deleteMany({});
   await EmployeeProfileChangeRequestModel.deleteMany({});
   await EmployeeQualificationModel.deleteMany({});
 
+  const hashedPassword = await bcrypt.hash(SEED_PASSWORD, 10);
+
+  const createEmployee = async <T extends Record<string, unknown>>(
+    payload: T,
+  ) => {
+    const workEmail = payload.workEmail as string | undefined;
+    const employeeNumber = payload.employeeNumber as string | undefined;
+    const nationalId = payload.nationalId as string | undefined;
+
+    const orFilters = [
+      workEmail ? { workEmail } : undefined,
+      employeeNumber ? { employeeNumber } : undefined,
+      nationalId ? { nationalId } : undefined,
+    ].filter(Boolean) as mongoose.FilterQuery<unknown>[];
+
+    const filter: mongoose.FilterQuery<unknown> = orFilters.length
+      ? { $or: orFilters }
+      : {};
+
+    const existing = await EmployeeProfileModel.findOne(filter);
+    if (existing) {
+      return existing;
+    }
+    try {
+      return await EmployeeProfileModel.create({
+        ...payload,
+        password: hashedPassword,
+      });
+    } catch (err: unknown) {
+      const dup = (err as { code?: number }).code === 11000;
+      if (dup) {
+        const fallback = await EmployeeProfileModel.findOne(filter);
+        if (fallback) {
+          return fallback;
+        }
+      }
+      throw err;
+    }
+  };
+
   console.log('Seeding Employees...');
-  const alice = await EmployeeProfileModel.create({
+  const alice = await createEmployee({
     firstName: 'Alice',
     lastName: 'Smith',
     fullName: 'Alice Smith',
     nationalId: 'NAT-ALICE-001',
-    password: 'password123',
     employeeNumber: 'EMP-001',
     dateOfHire: new Date('2020-01-01'),
     workEmail: 'alice@company.com',
@@ -88,12 +131,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.hrDept._id,
   });
 
-  const bob = await EmployeeProfileModel.create({
+  const bob = await createEmployee({
     firstName: 'Bob',
     lastName: 'Jones',
     fullName: 'Bob Jones',
     nationalId: 'NAT-BOB-002',
-    password: 'password123',
     employeeNumber: 'EMP-002',
     dateOfHire: new Date('2021-05-15'),
     workEmail: 'bob@company.com',
@@ -108,12 +150,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.engDept._id,
   });
 
-  const charlie = await EmployeeProfileModel.create({
+  const charlie = await createEmployee({
     firstName: 'Charlie',
     lastName: 'Brown',
     fullName: 'Charlie Brown',
     nationalId: 'NAT-CHARLIE-003',
-    password: 'password123',
     employeeNumber: 'EMP-003',
     dateOfHire: new Date('2022-03-10'),
     workEmail: 'charlie@company.com',
@@ -128,12 +169,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.salesDept._id,
   });
 
-  const diana = await EmployeeProfileModel.create({
+  const diana = await createEmployee({
     firstName: 'Diana',
     lastName: 'Prince',
     fullName: 'Diana Prince',
     nationalId: 'NAT-DIANA-004',
-    password: 'password123',
     employeeNumber: 'EMP-004',
     dateOfHire: new Date('2019-07-01'),
     workEmail: 'diana@company.com',
@@ -148,12 +188,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.hrDept._id,
   });
 
-  const eric = await EmployeeProfileModel.create({
+  const eric = await createEmployee({
     firstName: 'Eric',
     lastName: 'Stone',
     fullName: 'Eric Stone',
     nationalId: 'NAT-ERIC-005',
-    password: 'password123',
     employeeNumber: 'EMP-005',
     dateOfHire: new Date('2023-04-12'),
     workEmail: 'eric@company.com',
@@ -168,12 +207,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.engDept._id,
   });
 
-  const fatima = await EmployeeProfileModel.create({
+  const fatima = await createEmployee({
     firstName: 'Fatima',
     lastName: 'Hassan',
     fullName: 'Fatima Hassan',
     nationalId: 'NAT-FATIMA-006',
-    password: 'password123',
     employeeNumber: 'EMP-006',
     dateOfHire: new Date('2018-11-20'),
     workEmail: 'fatima@company.com',
@@ -188,12 +226,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.hrDept._id,
   });
 
-  const george = await EmployeeProfileModel.create({
+  const george = await createEmployee({
     firstName: 'George',
     lastName: 'Ibrahim',
     fullName: 'George Ibrahim',
     nationalId: 'NAT-GEORGE-007',
-    password: 'password123',
     employeeNumber: 'EMP-007',
     dateOfHire: new Date('2010-02-15'),
     workEmail: 'george@company.com',
@@ -208,12 +245,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.salesDept._id,
   });
 
-  const hannah = await EmployeeProfileModel.create({
+  const hannah = await createEmployee({
     firstName: 'Hannah',
     lastName: 'Lee',
     fullName: 'Hannah Lee',
     nationalId: 'NAT-HANNAH-008',
-    password: 'password123',
     employeeNumber: 'EMP-008',
     dateOfHire: new Date('2025-01-05'),
     workEmail: 'hannah@company.com',
@@ -228,12 +264,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.salesDept._id,
   });
 
-  const ian = await EmployeeProfileModel.create({
+  const ian = await createEmployee({
     firstName: 'Ian',
     lastName: 'Clark',
     fullName: 'Ian Clark',
     nationalId: 'NAT-IAN-009',
-    password: 'password123',
     employeeNumber: 'EMP-009',
     dateOfHire: new Date('2017-06-18'),
     workEmail: 'ian@company.com',
@@ -248,12 +283,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.engDept._id,
   });
 
-  const kevin = await EmployeeProfileModel.create({
+  const kevin = await createEmployee({
     firstName: 'Kevin',
     lastName: 'Adams',
     fullName: 'Kevin Adams',
     nationalId: 'NAT-KEVIN-010',
-    password: 'password123',
     employeeNumber: 'EMP-010',
     dateOfHire: new Date('2024-08-01'),
     workEmail: 'kevin@company.com',
@@ -268,12 +302,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.hrDept._id,
   });
 
-  const lina = await EmployeeProfileModel.create({
+  const lina = await createEmployee({
     firstName: 'Lina',
     lastName: 'Park',
     fullName: 'Lina Park',
     nationalId: 'NAT-LINA-011',
-    password: 'password123',
     employeeNumber: 'EMP-011',
     dateOfHire: new Date('2024-09-10'),
     workEmail: 'lina@company.com',
@@ -288,12 +321,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.engDept._id,
   });
 
-  const paula = await EmployeeProfileModel.create({
+  const paula = await createEmployee({
     firstName: 'Paula',
     lastName: 'Payne',
     fullName: 'Paula Payne',
     nationalId: 'NAT-PAULA-012',
-    password: 'password123',
     employeeNumber: 'EMP-012',
     dateOfHire: new Date('2024-12-01'),
     workEmail: 'paula@company.com',
@@ -308,12 +340,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.hrDept._id,
   });
 
-  const rami = await EmployeeProfileModel.create({
+  const rami = await createEmployee({
     firstName: 'Rami',
     lastName: 'Reed',
     fullName: 'Rami Reed',
     nationalId: 'NAT-RAMI-013',
-    password: 'password123',
     employeeNumber: 'EMP-013',
     dateOfHire: new Date('2025-01-20'),
     workEmail: 'rami@company.com',
@@ -328,12 +359,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.hrDept._id,
   });
 
-  const sarah = await EmployeeProfileModel.create({
+  const sarah = await createEmployee({
     firstName: 'Sarah',
     lastName: 'Nguyen',
     fullName: 'Sarah Nguyen',
     nationalId: 'NAT-SARAH-014',
-    password: 'password123',
     employeeNumber: 'EMP-014',
     dateOfHire: new Date('2025-02-15'),
     workEmail: 'sarah.senior.swe@company.com',
@@ -348,12 +378,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.engDept._id,
   });
 
-  const samir = await EmployeeProfileModel.create({
+  const samir = await createEmployee({
     firstName: 'Samir',
     lastName: 'Saleh',
     fullName: 'Samir Saleh',
     nationalId: 'NAT-SAMIR-015',
-    password: 'password123',
     employeeNumber: 'EMP-015',
     dateOfHire: new Date('2025-03-01'),
     workEmail: 'samir.sales.lead@company.com',
@@ -368,12 +397,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.salesDept._id,
   });
 
-  const tariq = await EmployeeProfileModel.create({
+  const tariq = await createEmployee({
     firstName: 'Tariq',
     lastName: 'Adel',
     fullName: 'Tariq Adel',
     nationalId: 'NAT-TARIQ-016',
-    password: 'password123',
     employeeNumber: 'EMP-016',
     dateOfHire: new Date('2025-04-05'),
     workEmail: 'tariq.ta@company.com',
@@ -388,12 +416,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.learningDept._id,
   });
 
-  const laila = await EmployeeProfileModel.create({
+  const laila = await createEmployee({
     firstName: 'Laila',
     lastName: 'Abbas',
     fullName: 'Laila Abbas',
     nationalId: 'NAT-LAILA-017',
-    password: 'password123',
     employeeNumber: 'EMP-017',
     dateOfHire: new Date('2025-04-10'),
     workEmail: 'laila.la@company.com',
@@ -408,12 +435,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.learningDept._id,
   });
 
-  const amir = await EmployeeProfileModel.create({
+  const amir = await createEmployee({
     firstName: 'Amir',
     lastName: 'Nabil',
     fullName: 'Amir Nabil',
     nationalId: 'NAT-AMIR-018',
-    password: 'password123',
     employeeNumber: 'EMP-018',
     dateOfHire: new Date('2025-04-15'),
     workEmail: 'amir.accountant@company.com',
@@ -428,12 +454,11 @@ export async function seedEmployeeProfile(
     primaryDepartmentId: departments.financeDept._id,
   });
 
-  const salma = await EmployeeProfileModel.create({
+  const salma = await createEmployee({
     firstName: 'Salma',
     lastName: 'Khaled',
     fullName: 'Salma Khaled',
     nationalId: 'NAT-SALMA-019',
-    password: 'password123',
     employeeNumber: 'EMP-019',
     dateOfHire: new Date('2025-04-20'),
     workEmail: 'salma.librarian@company.com',
