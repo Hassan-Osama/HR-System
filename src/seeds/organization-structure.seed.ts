@@ -42,6 +42,13 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     description: 'Sales and Marketing',
     isActive: true,
   });
+
+  const opsInactiveDept = await DepartmentModel.create({
+    code: 'OPS-001-INACTIVE',
+    name: 'Operations (Inactive)',
+    description: 'Inactive operations unit for coverage',
+    isActive: false,
+  });
   console.log('Departments seeded.');
 
   // 2. Create Positions
@@ -70,6 +77,14 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     isActive: true,
   });
 
+  const seniorSoftwareEngPos = await PositionModel.create({
+    code: 'POS-SENIOR-SWE',
+    title: 'Senior Software Engineer',
+    description: 'Leads software engineering initiatives',
+    departmentId: engDept._id,
+    isActive: true,
+  });
+
   const qaEngineerPos = await PositionModel.create({
     code: 'POS-QA-ENG',
     title: 'QA Engineer',
@@ -93,17 +108,27 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     departmentId: salesDept._id,
     isActive: true,
   });
+
+  const opsAnalystInactivePos = await PositionModel.create({
+    code: 'POS-OPS-INACTIVE',
+    title: 'Operations Analyst (Inactive)',
+    description: 'Inactive position for coverage',
+    departmentId: opsInactiveDept._id,
+    isActive: false,
+  });
   console.log('Positions seeded.');
 
   return {
-    departments: { hrDept, engDept, salesDept },
+    departments: { hrDept, engDept, salesDept, opsInactiveDept },
     positions: {
       hrManagerPos,
       hrGeneralistPos,
       softwareEngPos,
       qaEngineerPos,
+      seniorSoftwareEngPos,
       salesRepPos,
       salesLeadPos,
+      opsAnalystInactivePos,
     },
   };
 }

@@ -26,6 +26,8 @@ type SeedPositions = {
   hrGeneralistPos: SeedRef;
   qaEngineerPos: SeedRef;
   salesRepPos: SeedRef;
+  seniorSoftwareEngPos: SeedRef;
+  salesLeadPos: SeedRef;
 };
 
 export async function seedEmployeeProfile(
@@ -276,19 +278,99 @@ export async function seedEmployeeProfile(
     primaryPositionId: positions.qaEngineerPos._id,
     primaryDepartmentId: departments.engDept._id,
   });
+
+  const paula = await EmployeeProfileModel.create({
+    firstName: 'Paula',
+    lastName: 'Payne',
+    fullName: 'Paula Payne',
+    nationalId: 'NAT-PAULA-012',
+    password: 'password123',
+    employeeNumber: 'EMP-012',
+    dateOfHire: new Date('2024-12-01'),
+    workEmail: 'paula@company.com',
+    bankName: 'Capital Bank',
+    bankAccountNumber: 'CB-012-2024',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.FEMALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.hrManagerPos._id,
+    primaryDepartmentId: departments.hrDept._id,
+  });
+
+  const rami = await EmployeeProfileModel.create({
+    firstName: 'Rami',
+    lastName: 'Reed',
+    fullName: 'Rami Reed',
+    nationalId: 'NAT-RAMI-013',
+    password: 'password123',
+    employeeNumber: 'EMP-013',
+    dateOfHire: new Date('2025-01-20'),
+    workEmail: 'rami@company.com',
+    bankName: 'First National Bank',
+    bankAccountNumber: 'FNB-013-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.MALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.hrGeneralistPos._id,
+    primaryDepartmentId: departments.hrDept._id,
+  });
+
+  const sarah = await EmployeeProfileModel.create({
+    firstName: 'Sarah',
+    lastName: 'Nguyen',
+    fullName: 'Sarah Nguyen',
+    nationalId: 'NAT-SARAH-014',
+    password: 'password123',
+    employeeNumber: 'EMP-014',
+    dateOfHire: new Date('2025-02-15'),
+    workEmail: 'sarah.senior.swe@company.com',
+    bankName: 'Metro Credit Union',
+    bankAccountNumber: 'MCU-014-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.FEMALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.seniorSoftwareEngPos._id,
+    primaryDepartmentId: departments.engDept._id,
+  });
+
+  const samir = await EmployeeProfileModel.create({
+    firstName: 'Samir',
+    lastName: 'Saleh',
+    fullName: 'Samir Saleh',
+    nationalId: 'NAT-SAMIR-015',
+    password: 'password123',
+    employeeNumber: 'EMP-015',
+    dateOfHire: new Date('2025-03-01'),
+    workEmail: 'samir.sales.lead@company.com',
+    bankName: 'Capital Bank',
+    bankAccountNumber: 'CB-015-2025',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.MALE,
+    maritalStatus: MaritalStatus.MARRIED,
+    primaryPositionId: positions.salesLeadPos._id,
+    primaryDepartmentId: departments.salesDept._id,
+  });
   console.log('Employees seeded.');
 
   console.log('Assigning employee system roles...');
   await EmployeeSystemRoleModel.create([
     {
       employeeProfileId: alice._id,
-      roles: [SystemRole.HR_MANAGER, SystemRole.PAYROLL_MANAGER],
-      permissions: ['org.manage', 'payroll.approve'],
+      roles: [SystemRole.HR_MANAGER],
+      permissions: ['org.manage', 'hr.manage'],
     },
     {
       employeeProfileId: bob._id,
-      roles: [SystemRole.PAYROLL_SPECIALIST, SystemRole.RECRUITER],
-      permissions: ['payroll.process', 'recruitment.view'],
+      roles: [SystemRole.PAYROLL_SPECIALIST],
+      permissions: ['payroll.process'],
     },
     {
       employeeProfileId: charlie._id,
@@ -298,12 +380,12 @@ export async function seedEmployeeProfile(
     {
       employeeProfileId: diana._id,
       roles: [SystemRole.DEPARTMENT_HEAD],
-      permissions: ['org.manage'],
+      permissions: ['org.manage.department'],
     },
     {
       employeeProfileId: eric._id,
       roles: [SystemRole.HR_EMPLOYEE],
-      permissions: ['recruitment.view'],
+      permissions: ['hr.view'],
     },
     {
       employeeProfileId: fatima._id,
@@ -334,6 +416,26 @@ export async function seedEmployeeProfile(
       employeeProfileId: lina._id,
       roles: [SystemRole.DEPARTMENT_EMPLOYEE],
       permissions: [],
+    },
+    {
+      employeeProfileId: paula._id,
+      roles: [SystemRole.PAYROLL_MANAGER],
+      permissions: ['payroll.manage', 'payroll.approve'],
+    },
+    {
+      employeeProfileId: rami._id,
+      roles: [SystemRole.RECRUITER],
+      permissions: ['recruitment.manage'],
+    },
+    {
+      employeeProfileId: sarah._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
+    },
+    {
+      employeeProfileId: samir._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
     },
   ]);
 
