@@ -339,6 +339,7 @@ export async function seedPayrollExecution(
     _id: mongoose.Types.ObjectId;
     employeeId: mongoose.Types.ObjectId;
   }> = [];
+  let bobPayslip: SeedRef | undefined;
 
   for (const row of payrollRows) {
     const totalAllowances = sumAmounts(row.allowances);
@@ -430,6 +431,49 @@ export async function seedPayrollExecution(
     }
   }
 
+  // Create a dispute-friendly payslip for Bob (not part of payrollRows totals).
+  const bobBase = 13000;
+  const bobGross = bobBase;
+  const bobTax = toCurrency((bobGross * 10) / 100);
+  const bobDeductions = bobTax;
+  const bobNet = toCurrency(bobGross - bobDeductions);
+
+  await PaySlipModel.updateOne(
+    { employeeId: bob._id, payrollRunId: payrollRun._id },
+    {
+      $set: {
+        employeeId: bob._id,
+        payrollRunId: payrollRun._id,
+        earningsDetails: {
+          baseSalary: bobBase,
+          allowances: [],
+          bonuses: [],
+          benefits: [],
+          refunds: [],
+        },
+        deductionsDetails: {
+          taxes: [incomeTaxRule],
+          insurances: [],
+          penalties: undefined,
+        },
+        totalGrossSalary: bobGross,
+        totaDeductions: bobDeductions,
+        netPay: bobNet,
+        paymentStatus: PaySlipPaymentStatus.PENDING,
+      },
+    },
+    { upsert: true },
+  );
+
+  const bobPayslipDoc = await PaySlipModel.findOne({
+    employeeId: bob._id,
+    payrollRunId: payrollRun._id,
+  }).select({ _id: 1 });
+
+  if (bobPayslipDoc) {
+    bobPayslip = bobPayslipDoc as SeedRef;
+  }
+
   await PayrollRunsModel.updateOne(
     { runId },
     {
@@ -517,5 +561,5 @@ export async function seedPayrollExecution(
     );
   }
 
-  return { payrollRun, payslips };
+  return { payrollRun, payslips, bobPayslip };
 }

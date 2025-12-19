@@ -46,18 +46,18 @@ export async function seedPayrollTracking(
     payrollExecution?.bobPayslip?._id ||
     payrollExecution?.payslips?.find((p) => `${p.employeeId}` === `${employees.bob._id}`)?._id;
 
-  if (bobPayslipId) {
-    await DisputesModel.create({
-      disputeId: 'DISP-001',
-      description: 'Incorrect tax calculation',
-      employeeId: employees.bob._id,
-      payslipId: bobPayslipId,
-      status: DisputeStatus.UNDER_REVIEW,
-    });
-    console.log('Disputes seeded.');
-  } else {
-    console.log('Skipping Disputes (requires Payslip).');
+  if (!bobPayslipId) {
+    throw new Error('Missing Bob payslip for dispute seeding; expected from payrollExecution payload.');
   }
+
+  await DisputesModel.create({
+    disputeId: 'DISP-001',
+    description: 'Incorrect tax calculation',
+    employeeId: employees.bob._id,
+    payslipId: bobPayslipId,
+    status: DisputeStatus.UNDER_REVIEW,
+  });
+  console.log('Disputes seeded.');
 
   console.log('Seeding Refunds...');
   await RefundsModel.create({
