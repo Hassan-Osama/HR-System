@@ -8,7 +8,7 @@ export type terminationAndResignationBenefitsDocument = HydratedDocument<termina
 
 @Schema({ timestamps: true })
 export class terminationAndResignationBenefits {
-    @Prop({ required: true, unique: true })
+    @Prop({ required: true, })
     name: string; // termination/resignation name like:  End of Service Gratuity.
     @Prop({ required: true, min: 0 })
     amount: number;
