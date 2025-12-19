@@ -10,7 +10,11 @@ import {
 
 type SeedRef = { _id: mongoose.Types.ObjectId };
 type SeedEmployees = { alice: SeedRef; bob: SeedRef };
-type SeedPayrollExecution = { bobPayslip: SeedRef };
+type SeedPayrollExecution = Partial<{
+  bobPayslip: SeedRef;
+  payrollRun: SeedRef;
+  payslips: Array<{ _id: mongoose.Types.ObjectId; employeeId: mongoose.Types.ObjectId }>;
+}>;
 
 export async function seedPayrollTracking(
   connection: mongoose.Connection,
@@ -38,12 +42,16 @@ export async function seedPayrollTracking(
   console.log('Claims seeded.');
 
   console.log('Seeding Disputes...');
-  if (payrollExecution && payrollExecution.bobPayslip) {
+  const bobPayslipId =
+    payrollExecution?.bobPayslip?._id ||
+    payrollExecution?.payslips?.find((p) => `${p.employeeId}` === `${employees.bob._id}`)?._id;
+
+  if (bobPayslipId) {
     await DisputesModel.create({
       disputeId: 'DISP-001',
       description: 'Incorrect tax calculation',
       employeeId: employees.bob._id,
-      payslipId: payrollExecution.bobPayslip._id,
+      payslipId: bobPayslipId,
       status: DisputeStatus.UNDER_REVIEW,
     });
     console.log('Disputes seeded.');
