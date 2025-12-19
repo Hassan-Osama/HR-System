@@ -8,7 +8,7 @@ export type taxRulesDocument = HydratedDocument<taxRules>
 
 @Schema({ timestamps: true })
 export class taxRules {
-    @Prop({ required: true, unique: true })
+    @Prop({ required: true })
     name: string;
     @Prop()
     description?: string;
