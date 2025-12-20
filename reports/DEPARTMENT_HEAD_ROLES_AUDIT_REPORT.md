@@ -1,0 +1,14 @@
+# Department Head Roles Audit Report
+- Total departments: 8
+- Heads found: 8
+- Heads fixed: 8
+- Heads missing: 0
+- Details:
+- Human Resources: head.hr-001@company.com -> DEPARTMENT_HEAD
+- Engineering: head.eng-001@company.com -> DEPARTMENT_HEAD
+- Sales: head.sales-001@company.com -> DEPARTMENT_HEAD
+- Learning and Development: head.lnd-001@company.com -> DEPARTMENT_HEAD
+- Finance: head.fin-001@company.com -> DEPARTMENT_HEAD
+- Library Services: head.lib-001@company.com -> DEPARTMENT_HEAD
+- Operations (Inactive): head.ops-001-inactive@company.com -> DEPARTMENT_HEAD
+- Test Department: head.test-001@company.com -> DEPARTMENT_HEAD

@@ -1,0 +1,12 @@
+# SEED SCENARIO VALIDATION REPORT
+- PayrollRun PR-2025-001: employees=3 exceptions=1
+- Employees in run: Lina, Eric, Charlie
+- EmployeePayrollDetails:
+  - charlie@company.com: exceptions=Missing bank account; penalties=1
+  - lina@company.com: exceptions=none; penalties=0
+  - eric@company.com: exceptions=none; penalties=0
+- Payslips seeded for Lina, Eric, Charlie
+- Claims: 1 (employee=Charlie)
+- Disputes: 1 (employee=Charlie)
+- Refunds: 1 (status=pending, finance=Hannah)
+- PayrollConfig ownership: createdBy=Bob; approvedBy=Paula for approved configs

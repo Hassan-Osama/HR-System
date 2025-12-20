@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import { DepartmentSchema } from '../organization-structure/models/department.schema';
+import { PositionSchema } from '../organization-structure/models/position.schema';
 import { EmployeeProfileSchema } from '../employee-profile/models/employee-profile.schema';
 import { EmployeeSystemRoleSchema } from '../employee-profile/models/employee-system-role.schema';
 import { EmployeeProfileChangeRequestSchema } from '../employee-profile/models/ep-change-request.schema';
@@ -24,6 +28,7 @@ type SeedDepartments = {
   financeDept: SeedRef;
   libraryDept: SeedRef;
   opsInactiveDept: SeedRef;
+  testDept: SeedRef;
 };
 type SeedPositions = {
   hrManagerPos: SeedRef;
@@ -38,6 +43,8 @@ type SeedPositions = {
   accountantPos: SeedRef;
   librarianPos: SeedRef;
   opsAnalystInactivePos: SeedRef;
+  testDeptHeadPos: SeedRef;
+  testDeptEmployeePos: SeedRef;
 };
 
 const SEED_PASSWORD = 'ChangeMe123';
@@ -51,6 +58,8 @@ export async function seedEmployeeProfile(
     'EmployeeProfile',
     EmployeeProfileSchema,
   );
+  const DepartmentModel = connection.model('Department', DepartmentSchema);
+  const PositionModel = connection.model('Position', PositionSchema);
   const EmployeeSystemRoleModel = connection.model(
     'EmployeeSystemRole',
     EmployeeSystemRoleSchema,
@@ -72,6 +81,13 @@ export async function seedEmployeeProfile(
   await EmployeeQualificationModel.deleteMany({});
 
   const hashedPassword = await bcrypt.hash(SEED_PASSWORD, 10);
+
+  const headDepartments = await DepartmentModel.find({
+    headPositionId: { $exists: true },
+  }).lean();
+
+  const positionCountBefore = await PositionModel.countDocuments();
+  const employeeCountBefore = await EmployeeProfileModel.countDocuments();
 
   const createEmployee = async <T extends Record<string, unknown>>(
     payload: T,
@@ -146,8 +162,8 @@ export async function seedEmployeeProfile(
     workType: WorkType.FULL_TIME,
     gender: Gender.MALE,
     maritalStatus: MaritalStatus.MARRIED,
-    primaryPositionId: positions.softwareEngPos._id,
-    primaryDepartmentId: departments.engDept._id,
+    primaryPositionId: positions.accountantPos._id,
+    primaryDepartmentId: departments.financeDept._id,
   });
 
   const charlie = await createEmployee({
@@ -179,13 +195,13 @@ export async function seedEmployeeProfile(
     workEmail: 'diana@company.com',
     bankName: 'Capital Bank',
     bankAccountNumber: 'CB-004-2019',
-    status: EmployeeStatus.INACTIVE,
+    status: EmployeeStatus.ACTIVE,
     contractType: ContractType.FULL_TIME_CONTRACT,
     workType: WorkType.FULL_TIME,
     gender: Gender.FEMALE,
     maritalStatus: MaritalStatus.DIVORCED,
-    primaryPositionId: positions.hrManagerPos._id,
-    primaryDepartmentId: departments.hrDept._id,
+    primaryPositionId: positions.seniorSoftwareEngPos._id,
+    primaryDepartmentId: departments.engDept._id,
   });
 
   const eric = await createEmployee({
@@ -198,7 +214,7 @@ export async function seedEmployeeProfile(
     workEmail: 'eric@company.com',
     bankName: 'Metro Credit Union',
     bankAccountNumber: 'MCU-005-2023',
-    status: EmployeeStatus.ON_LEAVE,
+    status: EmployeeStatus.ACTIVE,
     contractType: ContractType.FULL_TIME_CONTRACT,
     workType: WorkType.FULL_TIME,
     gender: Gender.MALE,
@@ -217,7 +233,7 @@ export async function seedEmployeeProfile(
     workEmail: 'fatima@company.com',
     bankName: 'First National Bank',
     bankAccountNumber: 'FNB-006-2018',
-    status: EmployeeStatus.SUSPENDED,
+    status: EmployeeStatus.ACTIVE,
     contractType: ContractType.FULL_TIME_CONTRACT,
     workType: WorkType.FULL_TIME,
     gender: Gender.FEMALE,
@@ -236,13 +252,13 @@ export async function seedEmployeeProfile(
     workEmail: 'george@company.com',
     bankName: 'Global Savings',
     bankAccountNumber: 'GS-007-2010',
-    status: EmployeeStatus.RETIRED,
+    status: EmployeeStatus.ACTIVE,
     contractType: ContractType.PART_TIME_CONTRACT,
     workType: WorkType.PART_TIME,
     gender: Gender.MALE,
     maritalStatus: MaritalStatus.MARRIED,
-    primaryPositionId: positions.salesRepPos._id,
-    primaryDepartmentId: departments.salesDept._id,
+    primaryPositionId: positions.hrGeneralistPos._id,
+    primaryDepartmentId: departments.hrDept._id,
   });
 
   const hannah = await createEmployee({
@@ -255,13 +271,13 @@ export async function seedEmployeeProfile(
     workEmail: 'hannah@company.com',
     bankName: 'Metro Credit Union',
     bankAccountNumber: 'MCU-008-2025',
-    status: EmployeeStatus.PROBATION,
+    status: EmployeeStatus.ACTIVE,
     contractType: ContractType.PART_TIME_CONTRACT,
     workType: WorkType.PART_TIME,
     gender: Gender.FEMALE,
     maritalStatus: MaritalStatus.SINGLE,
-    primaryPositionId: positions.salesRepPos._id,
-    primaryDepartmentId: departments.salesDept._id,
+    primaryPositionId: positions.accountantPos._id,
+    primaryDepartmentId: departments.financeDept._id,
   });
 
   const ian = await createEmployee({
@@ -274,13 +290,13 @@ export async function seedEmployeeProfile(
     workEmail: 'ian@company.com',
     bankName: 'Capital Bank',
     bankAccountNumber: 'CB-009-2017',
-    status: EmployeeStatus.TERMINATED,
+    status: EmployeeStatus.ACTIVE,
     contractType: ContractType.FULL_TIME_CONTRACT,
     workType: WorkType.FULL_TIME,
     gender: Gender.MALE,
     maritalStatus: MaritalStatus.DIVORCED,
-    primaryPositionId: positions.softwareEngPos._id,
-    primaryDepartmentId: departments.engDept._id,
+    primaryPositionId: positions.hrGeneralistPos._id,
+    primaryDepartmentId: departments.hrDept._id,
   });
 
   const kevin = await createEmployee({
@@ -336,8 +352,8 @@ export async function seedEmployeeProfile(
     workType: WorkType.FULL_TIME,
     gender: Gender.FEMALE,
     maritalStatus: MaritalStatus.SINGLE,
-    primaryPositionId: positions.hrManagerPos._id,
-    primaryDepartmentId: departments.hrDept._id,
+    primaryPositionId: positions.accountantPos._id,
+    primaryDepartmentId: departments.financeDept._id,
   });
 
   const rami = await createEmployee({
@@ -472,10 +488,162 @@ export async function seedEmployeeProfile(
     primaryPositionId: positions.librarianPos._id,
     primaryDepartmentId: departments.libraryDept._id,
   });
+
+  const testHead = await createEmployee({
+    firstName: 'Tess',
+    lastName: 'Headley',
+    fullName: 'Tess Headley',
+    nationalId: 'NAT-TEST-HEAD-020',
+    employeeNumber: 'EMP-TEST-020',
+    dateOfHire: new Date('2025-05-01'),
+    workEmail: 'tess.headley@company.com',
+    bankName: 'Capital Bank',
+    bankAccountNumber: 'CB-TEST-020',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.FEMALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.testDeptHeadPos._id,
+    primaryDepartmentId: departments.testDept._id,
+  });
+
+  const testEmployee = await createEmployee({
+    firstName: 'Evan',
+    lastName: 'Tester',
+    fullName: 'Evan Tester',
+    nationalId: 'NAT-TEST-EMP-021',
+    employeeNumber: 'EMP-TEST-021',
+    dateOfHire: new Date('2025-05-02'),
+    workEmail: 'evan.tester@company.com',
+    bankName: 'Metro Credit Union',
+    bankAccountNumber: 'MCU-TEST-021',
+    status: EmployeeStatus.ACTIVE,
+    contractType: ContractType.FULL_TIME_CONTRACT,
+    workType: WorkType.FULL_TIME,
+    gender: Gender.MALE,
+    maritalStatus: MaritalStatus.SINGLE,
+    primaryPositionId: positions.testDeptEmployeePos._id,
+    primaryDepartmentId: departments.testDept._id,
+  });
   console.log('Employees seeded.');
 
+  const headRoleAssignments: Array<{
+    employeeProfileId: mongoose.Types.ObjectId;
+    roles: SystemRole[];
+    permissions: string[];
+    report: string;
+  }> = [];
+
+  for (const dept of headDepartments) {
+    if (!dept.headPositionId) {
+      continue;
+    }
+
+    const headPosId = dept.headPositionId as mongoose.Types.ObjectId;
+
+    let headEmployee = await EmployeeProfileModel.findOne({
+      primaryPositionId: headPosId,
+    });
+
+    if (!headEmployee) {
+      const emailHandle = (dept.code || dept.name)
+        .toLowerCase()
+        .replace(/\s+/g, '-');
+      headEmployee = await createEmployee({
+        firstName: 'Head',
+        lastName: dept.name,
+        fullName: `Head ${dept.name}`,
+        nationalId: `NAT-HEAD-${dept.code || dept.name}`,
+        employeeNumber: `EMP-HEAD-${dept.code || dept.name}`,
+        dateOfHire: new Date('2025-06-15'),
+        workEmail: `head.${emailHandle}@company.com`,
+        bankName: 'Head Bank',
+        bankAccountNumber: `HEAD-${dept.code || dept.name}`,
+        status: EmployeeStatus.ACTIVE,
+        contractType: ContractType.FULL_TIME_CONTRACT,
+        workType: WorkType.FULL_TIME,
+        gender: Gender.MALE,
+        maritalStatus: MaritalStatus.SINGLE,
+        primaryPositionId: headPosId,
+        primaryDepartmentId: dept._id,
+      });
+    }
+
+    headRoleAssignments.push({
+      employeeProfileId: headEmployee._id,
+      roles: [SystemRole.DEPARTMENT_HEAD],
+      permissions: ['org.manage.department'],
+      report: `${dept.name}: ${headEmployee.workEmail} -> DEPARTMENT_HEAD`,
+    });
+  }
+
+  console.log('Covering inactive departments with positions and employees...');
+  const inactiveDepartments = await DepartmentModel.find({
+    isActive: false,
+  }).lean();
+
+  const coverageRoleAssignments: Array<{
+    employeeProfileId: mongoose.Types.ObjectId;
+    roles: SystemRole[];
+    permissions: string[];
+  }> = [];
+
+  const coverageReportLines: string[] = [];
+
+  for (const dept of inactiveDepartments) {
+    const positionTitle = `Inactive - ${dept.name} Position`;
+    const positionCode = `POS-${dept.code}-INACTIVE-COVERAGE`;
+
+    const coveragePosition = await PositionModel.findOneAndUpdate(
+      { title: positionTitle, departmentId: dept._id },
+      {
+        $setOnInsert: {
+          code: positionCode,
+          description: `Coverage position for inactive department ${dept.name}`,
+          isActive: false,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    const emailHandle = dept.code.toLowerCase().replace(/\s+/g, '-');
+    const coverageEmployee = await createEmployee({
+      firstName: 'Inactive',
+      lastName: dept.name.replace(/\s+/g, ''),
+      fullName: `Inactive ${dept.name}`,
+      nationalId: `NAT-INACTIVE-${dept.code}`,
+      employeeNumber: `EMP-INACTIVE-${dept.code}`,
+      dateOfHire: new Date('2025-06-01'),
+      workEmail: `inactive.${emailHandle}@company.com`,
+      bankName: 'Coverage Bank',
+      bankAccountNumber: `COV-${dept.code}`,
+      status: EmployeeStatus.ACTIVE,
+      contractType: ContractType.FULL_TIME_CONTRACT,
+      workType: WorkType.FULL_TIME,
+      gender: Gender.MALE,
+      maritalStatus: MaritalStatus.SINGLE,
+      primaryPositionId: coveragePosition._id,
+      primaryDepartmentId: dept._id,
+    });
+
+    coverageRoleAssignments.push({
+      employeeProfileId: coverageEmployee._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
+    });
+
+    coverageReportLines.push(
+      `- ${dept.name}: position ${coveragePosition.code} -> employee ${coverageEmployee.workEmail}`,
+    );
+  }
+
   console.log('Assigning employee system roles...');
-  await EmployeeSystemRoleModel.create([
+  const headIds = new Set(
+    headRoleAssignments.map((h) => `${h.employeeProfileId}`),
+  );
+
+  const baseRoleAssignments = [
     {
       employeeProfileId: alice._id,
       roles: [SystemRole.HR_MANAGER],
@@ -493,8 +661,8 @@ export async function seedEmployeeProfile(
     },
     {
       employeeProfileId: diana._id,
-      roles: [SystemRole.DEPARTMENT_HEAD],
-      permissions: ['org.manage.department'],
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
     },
     {
       employeeProfileId: eric._id,
@@ -508,8 +676,8 @@ export async function seedEmployeeProfile(
     },
     {
       employeeProfileId: george._id,
-      roles: [SystemRole.LEGAL_POLICY_ADMIN],
-      permissions: ['policy.manage'],
+      roles: [SystemRole.HR_EMPLOYEE],
+      permissions: ['hr.view'],
     },
     {
       employeeProfileId: hannah._id,
@@ -533,13 +701,13 @@ export async function seedEmployeeProfile(
     },
     {
       employeeProfileId: paula._id,
-      roles: [SystemRole.PAYROLL_MANAGER],
-      permissions: ['payroll.manage', 'payroll.approve'],
+      roles: [SystemRole.FINANCE_STAFF],
+      permissions: ['finance.view'],
     },
     {
       employeeProfileId: rami._id,
-      roles: [SystemRole.RECRUITER],
-      permissions: ['recruitment.manage'],
+      roles: [SystemRole.HR_ADMIN],
+      permissions: ['hr.manage'],
     },
     {
       employeeProfileId: sarah._id,
@@ -571,6 +739,17 @@ export async function seedEmployeeProfile(
       roles: [SystemRole.DEPARTMENT_EMPLOYEE],
       permissions: ['org.read'],
     },
+    {
+      employeeProfileId: testEmployee._id,
+      roles: [SystemRole.DEPARTMENT_EMPLOYEE],
+      permissions: ['org.read'],
+    },
+    ...coverageRoleAssignments,
+  ].filter((assignment) => !headIds.has(`${assignment.employeeProfileId}`));
+
+  await EmployeeSystemRoleModel.create([
+    ...baseRoleAssignments,
+    ...headRoleAssignments,
   ]);
 
   console.log('Seeding employee qualifications...');
@@ -596,13 +775,92 @@ export async function seedEmployeeProfile(
     status: ProfileChangeStatus.PENDING,
   });
 
+  const reportLines = [
+    '# Test Department Seed Report',
+    '- Department: TEST-001',
+    `- Department head: ${testHead.workEmail}`,
+    `- Regular employee: ${testEmployee.workEmail}`,
+    '- Roles assigned:',
+    `  - ${testHead.workEmail}: ${SystemRole.DEPARTMENT_HEAD}`,
+    `  - ${testEmployee.workEmail}: ${SystemRole.DEPARTMENT_EMPLOYEE}`,
+  ];
+
+  writeFileSync(
+    join(process.cwd(), 'TEST_DEPARTMENT_SEED_REPORT.md'),
+    `${reportLines.join('\n')}\n`,
+  );
+
+  const departmentHeadScenarioReport = [
+    '# Department Head Scenario Report',
+    '- Department: TEST-001 (Test Department)',
+    `- Head: ${testHead.workEmail} (role: ${SystemRole.DEPARTMENT_HEAD})`,
+    '- Additional employees:',
+    `  - ${testEmployee.workEmail} (role: ${SystemRole.DEPARTMENT_EMPLOYEE})`,
+    '- Total employees in department: 2',
+  ];
+
+  writeFileSync(
+    join(process.cwd(), 'DEPARTMENT_HEAD_SCENARIO_REPORT.md'),
+    `${departmentHeadScenarioReport.join('\n')}\n`,
+  );
+
+  const positionCountAfter = await PositionModel.countDocuments();
+  const employeeCountAfter = await EmployeeProfileModel.countDocuments();
+
+  const inactiveCoverageReport = [
+    '# Inactive Department Coverage Report',
+    `- Inactive departments found: ${inactiveDepartments.length}`,
+    `- Positions before: ${positionCountBefore}`,
+    `- Positions after: ${positionCountAfter}`,
+    `- Employees before: ${employeeCountBefore}`,
+    `- Employees after: ${employeeCountAfter}`,
+    '- Details:',
+    ...(coverageReportLines.length ? coverageReportLines : ['- None created']),
+  ];
+
+  writeFileSync(
+    join(process.cwd(), 'INACTIVE_DEPARTMENT_COVERAGE_REPORT.md'),
+    `${inactiveCoverageReport.join('\n')}\n`,
+  );
+
+  const headRolesReport = [
+    '# Department Head Roles Audit Report',
+    `- Total departments: ${headDepartments.length}`,
+    `- Heads found: ${headRoleAssignments.length}`,
+    `- Heads fixed: ${headRoleAssignments.length}`,
+    `- Heads missing: 0`,
+    '- Details:',
+    ...(headRoleAssignments.length
+      ? headRoleAssignments.map((h) => `- ${h.report}`)
+      : ['- None']),
+  ];
+
+  writeFileSync(
+    join(process.cwd(), 'DEPARTMENT_HEAD_ROLES_AUDIT_REPORT.md'),
+    `${headRolesReport.join('\n')}\n`,
+  );
+
   return {
     alice,
     bob,
     charlie,
+    diana,
+    eric,
+    fatima,
+    george,
+    hannah,
+    ian,
+    kevin,
+    lina,
+    paula,
+    rami,
+    sarah,
+    samir,
     tariq,
     laila,
     amir,
     salma,
+    testHead,
+    testEmployee,
   };
 }

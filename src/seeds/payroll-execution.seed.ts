@@ -27,10 +27,8 @@ type SeedEmployees = {
   alice: SeedRef;
   bob: SeedRef;
   charlie: SeedRef;
-  kevin?: SeedRef;
+  eric?: SeedRef;
   lina?: SeedRef;
-  sarah?: SeedRef;
-  samir?: SeedRef;
 };
 type SeedBonus = SeedRef & { amount: number; positionName?: string };
 type SeedBenefit = SeedRef & { amount: number; name?: string; terms?: string };
@@ -93,25 +91,15 @@ const employeeIdentifiers: Record<
     workEmail: 'charlie@company.com',
     firstName: 'Charlie',
   },
-  kevin: {
-    employeeNumber: 'EMP-010',
-    workEmail: 'kevin@company.com',
-    firstName: 'Kevin',
+  eric: {
+    employeeNumber: 'EMP-005',
+    workEmail: 'eric@company.com',
+    firstName: 'Eric',
   },
   lina: {
     employeeNumber: 'EMP-011',
     workEmail: 'lina@company.com',
     firstName: 'Lina',
-  },
-  sarah: {
-    employeeNumber: 'EMP-014',
-    workEmail: 'sarah.senior.swe@company.com',
-    firstName: 'Sarah',
-  },
-  samir: {
-    employeeNumber: 'EMP-015',
-    workEmail: 'samir.sales.lead@company.com',
-    firstName: 'Samir',
   },
 };
 
@@ -217,10 +205,8 @@ export async function seedPayrollExecution(
 
   const bob = await resolveEmployee('bob');
   const charlie = await resolveEmployee('charlie');
-  const kevin = await resolveEmployee('kevin');
+  const eric = await resolveEmployee('eric');
   const lina = await resolveEmployee('lina');
-  const sarah = await resolveEmployee('sarah');
-  const samir = await resolveEmployee('samir');
 
   const baseAllowanceHousing = {
     name: 'Housing Allowance',
@@ -247,8 +233,8 @@ export async function seedPayrollExecution(
         payrollPeriod: new Date('2025-01-31'),
         status: PayRollStatus.DRAFT,
         entity: 'Tech Corp',
-        employees: 0,
-        exceptions: 0,
+        employees: 3,
+        exceptions: 1,
         totalnetpay: 0,
         payrollSpecialistId: bob._id,
         paymentStatus: PayRollPaymentStatus.PENDING,
@@ -283,22 +269,10 @@ export async function seedPayrollExecution(
       bonuses: [],
       benefits: [endOfServiceBenefit],
       penalties: [
-        { reason: 'Late arrival', amount: 100 },
-        { reason: 'Missing client follow-up', amount: 250 },
+        { reason: 'Missing bank account penalty', amount: 150 },
       ],
       bankStatus: BankStatus.MISSING,
-      exceptions: 'Missing bank account; includes end-of-service benefit',
-      taxRate: 10,
-    },
-    {
-      employee: kevin,
-      baseSalary: 14000,
-      allowances: [baseAllowanceHousing, baseAllowanceTransport],
-      bonuses: [],
-      benefits: [],
-      penalties: [{ reason: 'Unapproved expense claim', amount: 200 }],
-      bankStatus: BankStatus.VALID,
-      exceptions: 'Exception: verify allowance cap and expense dispute',
+      exceptions: 'Missing bank account',
       taxRate: 10,
     },
     {
@@ -312,22 +286,12 @@ export async function seedPayrollExecution(
       taxRate: 10,
     },
     {
-      employee: sarah,
-      baseSalary: 18000,
+      employee: eric,
+      baseSalary: 14000,
       allowances: [baseAllowanceHousing, baseAllowanceTransport],
       bonuses: [],
       benefits: [],
-      penalties: [{ reason: 'Late timesheet submission', amount: 150 }],
-      bankStatus: BankStatus.VALID,
-      taxRate: 10,
-    },
-    {
-      employee: samir,
-      baseSalary: 12000,
-      allowances: [baseAllowanceHousing, baseAllowanceTransport],
-      bonuses: [],
-      benefits: [],
-      penalties: [{ reason: 'Policy violation warning', amount: 120 }],
+      penalties: [],
       bankStatus: BankStatus.VALID,
       taxRate: 10,
     },
@@ -339,7 +303,12 @@ export async function seedPayrollExecution(
     _id: mongoose.Types.ObjectId;
     employeeId: mongoose.Types.ObjectId;
   }> = [];
-  let bobPayslip: SeedRef | undefined;
+  const payrollDetailsSummary: Array<{
+    employeeId: mongoose.Types.ObjectId;
+    exceptions?: string;
+    penaltiesCount: number;
+    workEmail?: string;
+  }> = [];
 
   for (const row of payrollRows) {
     const totalAllowances = sumAmounts(row.allowances);
@@ -375,6 +344,13 @@ export async function seedPayrollExecution(
       { upsert: true },
     );
 
+    payrollDetailsSummary.push({
+      employeeId: row.employee._id,
+      exceptions: row.exceptions,
+      penaltiesCount: row.penalties.length,
+      workEmail: row.employee.workEmail,
+    });
+
     if (row.penalties.length > 0) {
       await EmployeePenaltiesModel.updateOne(
         { employeeId: row.employee._id },
@@ -388,7 +364,7 @@ export async function seedPayrollExecution(
       );
     }
 
-    await PaySlipModel.updateOne(
+    const payslipDoc = await PaySlipModel.findOneAndUpdate(
       { employeeId: row.employee._id, payrollRunId: payrollRun._id },
       {
         $set: {
@@ -415,63 +391,11 @@ export async function seedPayrollExecution(
           paymentStatus: PaySlipPaymentStatus.PENDING,
         },
       },
-      { upsert: true },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
-
-    const updated = await PaySlipModel.findOne({
-      employeeId: row.employee._id,
-      payrollRunId: payrollRun._id,
-    }).select({ _id: 1, employeeId: 1 });
-
-    if (updated) {
-      payslips.push({
-        _id: updated._id,
-        employeeId: updated.employeeId,
-      });
+    if (payslipDoc) {
+      payslips.push({ _id: payslipDoc._id, employeeId: payslipDoc.employeeId });
     }
-  }
-
-  // Create a dispute-friendly payslip for Bob (not part of payrollRows totals).
-  const bobBase = 13000;
-  const bobGross = bobBase;
-  const bobTax = toCurrency((bobGross * 10) / 100);
-  const bobDeductions = bobTax;
-  const bobNet = toCurrency(bobGross - bobDeductions);
-
-  await PaySlipModel.updateOne(
-    { employeeId: bob._id, payrollRunId: payrollRun._id },
-    {
-      $set: {
-        employeeId: bob._id,
-        payrollRunId: payrollRun._id,
-        earningsDetails: {
-          baseSalary: bobBase,
-          allowances: [],
-          bonuses: [],
-          benefits: [],
-          refunds: [],
-        },
-        deductionsDetails: {
-          taxes: [incomeTaxRule],
-          insurances: [],
-          penalties: undefined,
-        },
-        totalGrossSalary: bobGross,
-        totaDeductions: bobDeductions,
-        netPay: bobNet,
-        paymentStatus: PaySlipPaymentStatus.PENDING,
-      },
-    },
-    { upsert: true },
-  );
-
-  const bobPayslipDoc = await PaySlipModel.findOne({
-    employeeId: bob._id,
-    payrollRunId: payrollRun._id,
-  }).select({ _id: 1 });
-
-  if (bobPayslipDoc) {
-    bobPayslip = bobPayslipDoc as SeedRef;
   }
 
   await PayrollRunsModel.updateOne(
@@ -493,9 +417,7 @@ export async function seedPayrollExecution(
       status: BonusStatus.APPROVED,
       paymentDate: new Date('2025-02-28'),
     },
-    { employee: kevin, status: BonusStatus.PENDING },
     { employee: charlie, status: BonusStatus.PENDING },
-    { employee: bob, status: BonusStatus.REJECTED },
   ];
 
   for (const assignment of signingBonusAssignments) {
@@ -523,43 +445,5 @@ export async function seedPayrollExecution(
     );
   }
 
-  const terminationAssignments = [
-    {
-      employee: charlie,
-      status: BenefitStatus.APPROVED,
-      terminationId: recruitmentData?.terminationRequest?._id,
-    },
-    { employee: samir, status: BenefitStatus.PENDING },
-    { employee: kevin, status: BenefitStatus.PENDING },
-    { employee: sarah, status: BenefitStatus.REJECTED },
-  ];
-
-  for (const assignment of terminationAssignments) {
-    const termination =
-      assignment.terminationId ||
-      (await ensureTerminationRequest(
-        assignment.employee._id,
-        TerminationStatus.PENDING,
-      ));
-
-    // Idempotent upsert keyed by employee + benefit; terminationId always valid per ensureTerminationRequest.
-    await EmployeeTerminationResignationModel.updateOne(
-      {
-        employeeId: assignment.employee._id,
-        benefitId: payrollConfig.benefits.endOfService._id,
-      },
-      {
-        $set: {
-          employeeId: assignment.employee._id,
-          benefitId: payrollConfig.benefits.endOfService._id,
-          givenAmount: payrollConfig.benefits.endOfService.amount,
-          terminationId: termination._id,
-          status: assignment.status,
-        },
-      },
-      { upsert: true },
-    );
-  }
-
-  return { payrollRun, payslips, bobPayslip };
+  return { payrollRun, payslips, payrollDetailsSummary };
 }

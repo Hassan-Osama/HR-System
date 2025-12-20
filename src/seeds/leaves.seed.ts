@@ -156,6 +156,67 @@ export async function seedLeaves(
     accruedRounded: 14,
     remaining: 14,
   });
+
+  // Entitlements for employees with seeded leave requests
+  const annualDefaults = {
+    yearlyEntitlement: 21,
+    accruedActual: 21,
+    accruedRounded: 21,
+    remaining: 21,
+  };
+
+  const sickDefaults = {
+    yearlyEntitlement: 14,
+    accruedActual: 14,
+    accruedRounded: 14,
+    remaining: 14,
+  };
+
+  await LeaveEntitlementModel.create([
+    {
+      employeeId: employees.bob._id,
+      leaveTypeId: sickLeave._id,
+      ...sickDefaults,
+    },
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: annualLeave._id,
+      ...annualDefaults,
+    },
+    {
+      employeeId: employees.tariq._id,
+      leaveTypeId: sickLeave._id,
+      ...sickDefaults,
+    },
+    {
+      employeeId: employees.laila._id,
+      leaveTypeId: annualLeave._id,
+      ...annualDefaults,
+    },
+    {
+      employeeId: employees.laila._id,
+      leaveTypeId: sickLeave._id,
+      ...sickDefaults,
+    },
+    {
+      employeeId: employees.amir._id,
+      leaveTypeId: annualLeave._id,
+      ...annualDefaults,
+    },
+    {
+      employeeId: employees.amir._id,
+      leaveTypeId: sickLeave._id,
+      ...sickDefaults,
+    },
+    {
+      employeeId: employees.salma._id,
+      leaveTypeId: unpaidLeave._id,
+      yearlyEntitlement: 0,
+      accruedActual: 0,
+      accruedRounded: 0,
+      remaining: 0,
+    },
+  ]);
   console.log('Leave Entitlements seeded.');
 
   console.log('Seeding Leave Requests...');

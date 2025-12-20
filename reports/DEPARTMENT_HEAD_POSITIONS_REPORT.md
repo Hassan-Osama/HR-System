@@ -1,0 +1,18 @@
+# Department Head Positions Report
+- Representation: Department.headPositionId links a department to its head Position.
+- Detected / assigned head positions:
+- Human Resources: HR Manager (code: POS-HR-MGR)
+- Engineering: Department Head - Engineering (code: POS-ENG-001-HEAD)
+- Sales: Department Head - Sales (code: POS-SALES-001-HEAD)
+- Learning and Development: Department Head - Learning and Development (code: POS-LND-001-HEAD)
+- Finance: Department Head - Finance (code: POS-FIN-001-HEAD)
+- Library Services: Department Head - Library Services (code: POS-LIB-001-HEAD)
+- Operations (Inactive): Department Head - Operations (Inactive) (code: POS-OPS-001-INACTIVE-HEAD)
+- Test Department: Test Dept Head (code: POS-TEST-HEAD)
+- Newly created head positions:
+- Engineering -> Department Head - Engineering
+- Sales -> Department Head - Sales
+- Learning and Development -> Department Head - Learning and Development
+- Finance -> Department Head - Finance
+- Library Services -> Department Head - Library Services
+- Operations (Inactive) -> Department Head - Operations (Inactive)

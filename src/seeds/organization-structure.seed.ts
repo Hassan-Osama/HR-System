@@ -11,6 +11,8 @@ import {
   ApprovalDecision,
   ChangeLogAction,
 } from '../organization-structure/enums/organization-structure.enums';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 
 export async function seedOrganizationStructure(connection: mongoose.Connection) {
   const DepartmentModel = connection.model('Department', DepartmentSchema);
@@ -70,6 +72,18 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     description: 'Inactive operations unit for coverage',
     isActive: false,
   });
+
+  const testDept = await DepartmentModel.findOneAndUpdate(
+    { code: 'TEST-001' },
+    {
+      $setOnInsert: {
+        name: 'Test Department',
+        description: 'Seeded test department',
+        isActive: true,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
   console.log('Departments seeded.');
 
   // 2. Create Positions
@@ -169,7 +183,107 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
     departmentId: opsInactiveDept._id,
     isActive: false,
   });
+
+  const testDeptHeadPos = await PositionModel.findOneAndUpdate(
+    { code: 'POS-TEST-HEAD' },
+    {
+      $setOnInsert: {
+        title: 'Test Dept Head',
+        description: 'Head of Test Department',
+        departmentId: testDept._id,
+        isActive: true,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  const testDeptEmployeePos = await PositionModel.findOneAndUpdate(
+    { code: 'POS-TEST-EMP' },
+    {
+      $setOnInsert: {
+        title: 'Test Dept Employee',
+        description: 'Employee in Test Department',
+        departmentId: testDept._id,
+        isActive: true,
+      },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  if (!testDept.headPositionId) {
+    await DepartmentModel.updateOne(
+      { _id: testDept._id },
+      { $set: { headPositionId: testDeptHeadPos._id } },
+    );
+  }
+
+  const isHeadTitle = (title: string) => {
+    const t = title.trim().toLowerCase();
+    return (
+      t.includes('department head') ||
+      t.includes('dept head') ||
+      (t.includes('head') && t.includes('department')) ||
+      t === 'head' ||
+      t.includes('manager')
+    );
+  };
+
+  const departments = await DepartmentModel.find({}).lean();
+  const positionsAll = await PositionModel.find({}).lean();
+  const headReportLines: string[] = [];
+  const createdHeadPositions: string[] = [];
+
+  for (const dept of departments) {
+    const candidates = positionsAll.filter(
+      (p) => p.departmentId?.toString() === dept._id.toString() && isHeadTitle(p.title),
+    );
+
+    let headPosition = candidates[0];
+
+    if (!headPosition) {
+      headPosition = await PositionModel.findOneAndUpdate(
+        { code: `POS-${dept.code}-HEAD` },
+        {
+          $setOnInsert: {
+            title: `Department Head - ${dept.name}`,
+            description: `Department head position for ${dept.name}`,
+            departmentId: dept._id,
+            isActive: true,
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+      ).lean();
+
+      createdHeadPositions.push(`${dept.name} -> ${headPosition.title}`);
+      positionsAll.push(headPosition);
+    }
+
+    if (!dept.headPositionId || dept.headPositionId.toString() !== headPosition._id.toString()) {
+      await DepartmentModel.updateOne(
+        { _id: dept._id },
+        { $set: { headPositionId: headPosition._id } },
+      );
+    }
+
+    headReportLines.push(
+      `- ${dept.name}: ${headPosition.title} (code: ${headPosition.code})`,
+    );
+  }
   console.log('Positions seeded.');
+
+  const headPositionsReport = [
+    '# Department Head Positions Report',
+    '- Representation: Department.headPositionId links a department to its head Position.',
+    '- Detected / assigned head positions:',
+    ...headReportLines,
+    '- Newly created head positions:',
+    ...(createdHeadPositions.length ? createdHeadPositions.map((l) => `- ${l}`) : ['- None']),
+  ];
+
+  writeFileSync(
+    join(process.cwd(), 'DEPARTMENT_HEAD_POSITIONS_REPORT.md'),
+    `${headPositionsReport.join('\n')}\n`,
+  );
 
   return {
     departments: {
@@ -180,6 +294,7 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
       financeDept,
       libraryDept,
       opsInactiveDept,
+      testDept,
     },
     positions: {
       hrManagerPos,
@@ -194,6 +309,8 @@ export async function seedOrganizationStructure(connection: mongoose.Connection)
       accountantPos,
       librarianPos,
       opsAnalystInactivePos,
+      testDeptHeadPos,
+      testDeptEmployeePos,
     },
   };
 }
@@ -220,8 +337,8 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
 
   await PositionAssignmentModel.create({
     employeeProfileId: employees.bob._id,
-    positionId: positions.softwareEngPos._id,
-    departmentId: departments.engDept._id,
+    positionId: positions.accountantPos._id,
+    departmentId: departments.financeDept._id,
     startDate: new Date('2021-05-15'),
   });
 
@@ -230,6 +347,20 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
     positionId: positions.salesRepPos._id,
     departmentId: departments.salesDept._id,
     startDate: new Date('2022-03-10'),
+  });
+
+  await PositionAssignmentModel.create({
+    employeeProfileId: employees.diana._id,
+    positionId: positions.seniorSoftwareEngPos._id,
+    departmentId: departments.engDept._id,
+    startDate: new Date('2019-07-01'),
+  });
+
+  await PositionAssignmentModel.create({
+    employeeProfileId: employees.george._id,
+    positionId: positions.hrGeneralistPos._id,
+    departmentId: departments.hrDept._id,
+    startDate: new Date('2010-02-15'),
   });
 
   await PositionAssignmentModel.create({
@@ -247,6 +378,13 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
   });
 
   await PositionAssignmentModel.create({
+    employeeProfileId: employees.paula._id,
+    positionId: positions.accountantPos._id,
+    departmentId: departments.financeDept._id,
+    startDate: new Date('2024-12-01'),
+  });
+
+  await PositionAssignmentModel.create({
     employeeProfileId: employees.amir._id,
     positionId: positions.accountantPos._id,
     departmentId: departments.financeDept._id,
@@ -259,6 +397,30 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
     departmentId: departments.libraryDept._id,
     startDate: new Date('2025-04-20'),
   });
+
+  await PositionAssignmentModel.findOneAndUpdate(
+    {
+      employeeProfileId: employees.testHead._id,
+      positionId: positions.testDeptHeadPos._id,
+      departmentId: departments.testDept._id,
+    },
+    {
+      $setOnInsert: { startDate: new Date('2025-05-01') },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  await PositionAssignmentModel.findOneAndUpdate(
+    {
+      employeeProfileId: employees.testEmployee._id,
+      positionId: positions.testDeptEmployeePos._id,
+      departmentId: departments.testDept._id,
+    },
+    {
+      $setOnInsert: { startDate: new Date('2025-05-02') },
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
   console.log('Position Assignments seeded.');
 
   console.log('Seeding Structure Change workflow...');
@@ -300,4 +462,5 @@ export async function seedPositionAssignments(connection: mongoose.Connection, e
     },
   });
   console.log('Structure Change workflow seeded.');
+
 }

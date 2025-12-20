@@ -22,7 +22,12 @@ import {
 const payrollPoliciesSchema = SchemaFactory.createForClass(payrollPolicies);
 
 type SeedRef = { _id: mongoose.Types.ObjectId };
-type SeedEmployees = { alice: SeedRef; bob: SeedRef; charlie: SeedRef };
+type SeedEmployees = {
+  alice: SeedRef;
+  bob: SeedRef;
+  charlie: SeedRef;
+  paula?: SeedRef;
+};
 
 export async function seedPayrollConfiguration(
   connection: mongoose.Connection,
@@ -92,8 +97,8 @@ export async function seedPayrollConfiguration(
     baseSalary: 8000,
     grossSalary: 11000,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
 
@@ -101,8 +106,8 @@ export async function seedPayrollConfiguration(
     baseSalary: 15000,
     grossSalary: 18000,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
 
@@ -110,16 +115,14 @@ export async function seedPayrollConfiguration(
     baseSalary: 10000,
     grossSalary: 13000,
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
   });
 
   const internGrade = await ensurePayGrade('Intern Rejected', {
     baseSalary: 6000,
     grossSalary: 9000,
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
   console.log('Pay Grades seeded.');
 
@@ -128,8 +131,8 @@ export async function seedPayrollConfiguration(
     name: 'Housing approved Allowance',
     amount: 2000,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
 
@@ -137,8 +140,8 @@ export async function seedPayrollConfiguration(
     name: 'Transport Approved Allowance',
     amount: 1000,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
 
@@ -146,7 +149,7 @@ export async function seedPayrollConfiguration(
     name: 'Meal Draft Allowance',
     amount: 1000,
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -155,9 +158,7 @@ export async function seedPayrollConfiguration(
     name: 'Telephone Rejected Allowance',
     amount: 1000,
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
   console.log('Allowances seeded.');
 
@@ -169,8 +170,8 @@ export async function seedPayrollConfiguration(
     maxSalary: 3000,
     employeeRate: 8,
     employerRate: 14,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const socialInsurance2 = await InsuranceBracketsModel.create({
@@ -180,8 +181,8 @@ export async function seedPayrollConfiguration(
     maxSalary: 9000,
     employeeRate: 10,
     employerRate: 16,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const socialInsurance3 = await InsuranceBracketsModel.create({
@@ -191,8 +192,8 @@ export async function seedPayrollConfiguration(
     maxSalary: 100000,
     employeeRate: 12,
     employerRate: 18,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const medicalInsurance = await InsuranceBracketsModel.create({
@@ -203,7 +204,7 @@ export async function seedPayrollConfiguration(
     maxSalary: 10000,
     employeeRate: 11,
     employerRate: 18.75,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -215,9 +216,7 @@ export async function seedPayrollConfiguration(
     maxSalary: 10000,
     employeeRate: 11,
     employerRate: 18.75,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
 
   console.log('Insurance Brackets seeded.');
@@ -227,15 +226,15 @@ export async function seedPayrollConfiguration(
     type: 'Monthly Approved Salary',
     amount: 6000, // Minimum allowed value
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const hourlyPayType = await PayTypeModel.create({
     type: 'Hourly Draft Salary',
     amount: 6000, // Minimum allowed value
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -243,9 +242,7 @@ export async function seedPayrollConfiguration(
     type: 'Contact Rejected Salary',
     amount: 6000, // Minimum allowed value
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
   console.log('Pay Types seeded.');
 
@@ -254,23 +251,23 @@ export async function seedPayrollConfiguration(
     positionName: 'Senior Developer',
     amount: 5000,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const juniorSigningBonus = await SigningBonusModel.create({
     positionName: 'Junior Developer',
     amount: 1000,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const midSigningBonus = await SigningBonusModel.create({
     positionName: 'Mid Developer',
     amount: 3000,
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -278,9 +275,7 @@ export async function seedPayrollConfiguration(
     positionName: 'Intern Developer',
     amount: 500,
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
   console.log('Signing Bonuses seeded.');
 
@@ -290,8 +285,8 @@ export async function seedPayrollConfiguration(
     description: 'Standard income tax deduction',
     rate: 10,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const salesTax = await TaxRulesModel.create({
@@ -299,7 +294,7 @@ export async function seedPayrollConfiguration(
     description: 'Sales tax deduction',
     rate: 20,
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -308,9 +303,7 @@ export async function seedPayrollConfiguration(
     description: 'VAT tax deduction',
     rate: 14,
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
   console.log('Tax Rules seeded.');
 
@@ -320,8 +313,8 @@ export async function seedPayrollConfiguration(
     amount: 10000,
     terms: 'After 1 year of service',
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id,
     approvedAt: new Date(),
   });
   const compensation = await TerminationBenefitsModel.create({
@@ -329,7 +322,7 @@ export async function seedPayrollConfiguration(
     amount: 10000,
     terms: 'After 1 year of service',
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -338,9 +331,7 @@ export async function seedPayrollConfiguration(
     amount: 10000,
     terms: 'After 1 year of service',
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
   });
   console.log('Termination Benefits seeded.');
 
@@ -357,8 +348,8 @@ export async function seedPayrollConfiguration(
     },
     applicability: Applicability.AllEmployees,
     status: ConfigStatus.APPROVED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
+    createdBy: employees.bob._id,
+    approvedBy: employees.paula?._id || employees.bob._id,
     approvedAt: new Date(),
   });
   const allowancePolicy = await PayrollPoliciesModel.create({
@@ -373,7 +364,7 @@ export async function seedPayrollConfiguration(
     },
     applicability: Applicability.AllEmployees,
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice._id,
+    createdBy: employees.bob._id,
     // approvedBy: employees.alice._id,
     // approvedAt: new Date(),
   });
@@ -389,9 +380,8 @@ export async function seedPayrollConfiguration(
     },
     applicability: Applicability.AllEmployees,
     status: ConfigStatus.REJECTED,
-    createdBy: employees.alice._id,
-    approvedBy: employees.alice._id,
-    approvedAt: new Date(),
+    createdBy: employees.bob._id,
+    approvalNotes: 'Rejected during review',
   });
 
   console.log('Payroll Policies seeded.');
@@ -405,7 +395,7 @@ export async function seedPayrollConfiguration(
     baseSalary: 8000,
     grossSalary: 11000,
     status: ConfigStatus.DRAFT,
-    createdBy: employees.alice?._id,
+    createdBy: employees.bob?._id,
   };
 
   const createdPayGrades: string[] = [];
@@ -425,9 +415,15 @@ export async function seedPayrollConfiguration(
           baseSalary: template.baseSalary,
           grossSalary: template.grossSalary,
           status: template.status,
-          createdBy: template.createdBy || employees.alice?._id,
-          approvedBy: template.status === ConfigStatus.APPROVED ? template.approvedBy : undefined,
-          approvedAt: template.status === ConfigStatus.APPROVED ? template.approvedAt || new Date() : undefined,
+          createdBy: template.createdBy || employees.bob?._id,
+          approvedBy:
+            template.status === ConfigStatus.APPROVED
+              ? template.approvedBy || employees.paula?._id
+              : undefined,
+          approvedAt:
+            template.status === ConfigStatus.APPROVED
+              ? template.approvedAt || new Date()
+              : undefined,
         },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true },

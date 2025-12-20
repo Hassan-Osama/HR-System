@@ -11,7 +11,7 @@
 Employee Identifier | Employee Name | User Identifier | Assigned System Role(s)
 --- | --- | --- | ---
 EMP-001 (NAT-ALICE-001) | Alice Smith | Not applicable (no separate user record; roles linked via EmployeeProfile._id) | HR Manager; Payroll Manager
-EMP-002 (NAT-BOB-002) | Bob Jones | Not applicable (no separate user record; roles linked via EmployeeProfile._id) | Payroll Specialist; Recruiter
+EMP-002 (NAT-lina-002) | lina Jones | Not applicable (no separate user record; roles linked via EmployeeProfile._id) | Payroll Specialist; Recruiter
 EMP-003 (NAT-CHARLIE-003) | Charlie Brown | Not applicable (no separate user record; roles linked via EmployeeProfile._id) | Department employee
 EMP-004 (NAT-DIANA-004) | Diana Prince | Not applicable (no separate user record; roles linked via EmployeeProfile._id) | Department head
 EMP-005 (NAT-ERIC-005) | Eric Stone | Not applicable (no separate user record; roles linked via EmployeeProfile._id) | HR Employee
@@ -30,11 +30,11 @@ department employee | 3 (Charlie Brown; Kevin Adams; Lina Park)
 department head | 1 (Diana Prince)
 HR Manager | 1 (Alice Smith)
 HR Employee | 1 (Eric Stone)
-Payroll Specialist | 1 (Bob Jones)
+Payroll Specialist | 1 (lina Jones)
 Payroll Manager | 1 (Alice Smith)
 System Admin | 1 (Fatima Hassan)
 Legal & Policy Admin | 1 (George Ibrahim)
-Recruiter | 1 (Bob Jones)
+Recruiter | 1 (lina Jones)
 Finance Staff | 1 (Hannah Lee)
 Job Candidate | 0 (not assigned in seeds)
 HR Admin | 1 (Ian Clark)
