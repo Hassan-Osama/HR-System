@@ -67,11 +67,12 @@ export default function RunPayrollPage() {
     setSuccess(null);
 
     // Fallback to user.userId if employeeId is not available
-    const specialistId = user?.employeeId || user?.userId;
+    const currentUser = user as any;
+    const specialistId = currentUser?.employeeId || currentUser?.userId;
 
     if (!specialistId) {
-        setError("Could not identify the current user. Please re-login.");
-        return;
+      setError("Could not identify the current user. Please re-login.");
+      return;
     }
 
     try {
@@ -81,9 +82,9 @@ export default function RunPayrollPage() {
         employees: 0,
         exceptions: 0,
         totalnetpay: 0,
-        payrollSpecialistId: specialistId 
+        payrollSpecialistId: specialistId
       });
-      
+
       setSuccess("Payroll run created successfully.");
       fetchRuns();
     } catch (error: any) {
@@ -100,9 +101,9 @@ export default function RunPayrollPage() {
       setGenerating(runId);
       setError(null);
       setSuccess(null);
-      
+
       await api.post(`/payroll-execution/runs/${runId}/generate-payslips`);
-      
+
       setSuccess("Payslips generated successfully for the run.");
       fetchRuns();
     } catch (error) {
@@ -169,7 +170,7 @@ export default function RunPayrollPage() {
                     startAdornment: <InputAdornment position="start"><DateIcon fontSize="small" sx={{ color: 'text.secondary' }} /></InputAdornment>,
                   }}
                 />
-                
+
                 <TextField
                   label="Entity / Company Name"
                   value={formData.entity}
@@ -213,9 +214,9 @@ export default function RunPayrollPage() {
                 </Typography>
               </Box>
               {loading ? (
-                  <Box sx={{ p: 4, textAlign: 'center' }}>
-                      <CircularProgress />
-                  </Box>
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <CircularProgress />
+                </Box>
               ) : runs.length === 0 ? (
                 <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
                   No payroll runs found. Create one to get started.
@@ -264,20 +265,20 @@ export default function RunPayrollPage() {
                           </TableCell>
                           <TableCell align="right">
                             {run.status === 'draft' && (
-                                <Button 
-                                    size="small" 
-                                    variant="contained" 
-                                    color="secondary"
-                                    onClick={() => handleGeneratePayslips(run._id)}
-                                    disabled={generating === run._id}
-                                >
-                                    {generating === run._id ? <CircularProgress size={20} color="inherit" /> : 'Generate Payslips'}
-                                </Button>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                color="secondary"
+                                onClick={() => handleGeneratePayslips(run._id)}
+                                disabled={generating === run._id}
+                              >
+                                {generating === run._id ? <CircularProgress size={20} color="inherit" /> : 'Generate Payslips'}
+                              </Button>
                             )}
                             {run.status !== 'draft' && (
-                                <IconButton size="small" title="View Details">
-                                    <ViewIcon />
-                                </IconButton>
+                              <IconButton size="small" title="View Details">
+                                <ViewIcon />
+                              </IconButton>
                             )}
                           </TableCell>
                         </TableRow>

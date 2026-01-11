@@ -43,11 +43,12 @@ export default function DisputesPage() {
   });
 
   useEffect(() => {
-    if (user?.employeeId) {
+    const currentUser = user as any;
+    if (currentUser?.employeeId) {
       fetchDisputes();
       fetchPayslips();
-    } else if (user && !user.employeeId) {
-        setLoading(false);
+    } else if (user && !currentUser.employeeId) {
+      setLoading(false);
     }
   }, [user]);
 
@@ -55,7 +56,8 @@ export default function DisputesPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/payroll-tracking/disputes?employeeId=${user.employeeId}`);
+      const currentUser = user as any;
+      const response = await api.get(`/payroll-tracking/disputes?employeeId=${currentUser.employeeId}`);
       setDisputes(response.data);
     } catch (error) {
       console.error('Error fetching disputes:', error);
@@ -67,7 +69,8 @@ export default function DisputesPage() {
 
   const fetchPayslips = async () => {
     try {
-      const response = await api.get(`/payroll-tracking/payslips/employee/${user.employeeId}`);
+      const currentUser = user as any;
+      const response = await api.get(`/payroll-tracking/payslips/employee/${currentUser.employeeId}`);
       setPayslips(response.data);
     } catch (error) {
       console.error('Error fetching payslips:', error);
@@ -79,20 +82,21 @@ export default function DisputesPage() {
     setError(null);
 
     if (!formData.payslipId) {
-        setError("Please select a payslip.");
-        return;
+      setError("Please select a payslip.");
+      return;
     }
     if (!formData.description.trim()) {
-        setError("Description is required.");
-        return;
+      setError("Description is required.");
+      return;
     }
 
     // Fallback to user.userId if employeeId is not available
-    const employeeId = user?.employeeId || user?.userId;
+    const currentUser = user as any;
+    const employeeId = currentUser?.employeeId || currentUser?.userId;
 
     if (!employeeId) {
-        setError("Could not identify the current user. Please re-login.");
-        return;
+      setError("Could not identify the current user. Please re-login.");
+      return;
     }
 
     try {
@@ -101,7 +105,7 @@ export default function DisputesPage() {
         ...formData,
         employeeId: employeeId
       });
-      
+
       setFormData({ description: '', payslipId: '' });
       fetchDisputes();
     } catch (error: any) {
@@ -109,7 +113,7 @@ export default function DisputesPage() {
       const msg = error?.response?.data?.message || "Failed to submit dispute.";
       setError(msg);
     } finally {
-        setSaving(false);
+      setSaving(false);
     }
   };
 
@@ -173,7 +177,7 @@ export default function DisputesPage() {
                     </MenuItem>
                   ))}
                 </TextField>
-                
+
                 <TextField
                   label="Description"
                   value={formData.description}
@@ -220,9 +224,9 @@ export default function DisputesPage() {
                 </Typography>
               </Box>
               {loading ? (
-                  <Box sx={{ p: 4, textAlign: 'center' }}>
-                      <CircularProgress />
-                  </Box>
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <CircularProgress />
+                </Box>
               ) : disputes.length === 0 ? (
                 <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
                   No disputes found.

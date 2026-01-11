@@ -14,3 +14,10 @@ export enum RefundStatus {
     PENDING = 'pending',
     PAID = 'paid' // when payroll execution
 }
+
+export enum PayrollDocumentType {
+    TAX_FORM = 'Tax Form',
+    INSURANCE_CERTIFICATE = 'Insurance Certificate',
+    PAYSLIP = 'Payslip',
+    YTD_SUMMARY = 'Year-to-Date Summary'
+}

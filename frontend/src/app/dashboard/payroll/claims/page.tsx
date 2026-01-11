@@ -44,11 +44,12 @@ export default function ClaimsPage() {
 
   useEffect(() => {
     // Use employeeId if available, otherwise fallback to userId
-    const idToUse = user?.employeeId || user?.userId;
+    const currentUser = user as any;
+    const idToUse = currentUser?.employeeId || currentUser?.userId;
     if (idToUse) {
       fetchClaims(idToUse);
     } else if (user && !idToUse) {
-        setLoading(false);
+      setLoading(false);
     }
   }, [user]);
 
@@ -72,20 +73,21 @@ export default function ClaimsPage() {
 
     const amount = Number(formData.amount);
     if (!formData.description.trim()) {
-        setError("Description is required.");
-        return;
+      setError("Description is required.");
+      return;
     }
     if (Number.isNaN(amount) || amount <= 0) {
-        setError("Amount must be a positive number.");
-        return;
+      setError("Amount must be a positive number.");
+      return;
     }
 
     // Fallback to user.userId if employeeId is not available
-    const employeeId = user?.employeeId || user?.userId;
+    const currentUser = user as any;
+    const employeeId = currentUser?.employeeId || currentUser?.userId;
 
     if (!employeeId) {
-        setError("Could not identify the current user. Please re-login.");
-        return;
+      setError("Could not identify the current user. Please re-login.");
+      return;
     }
 
     try {
@@ -95,7 +97,7 @@ export default function ClaimsPage() {
         amount,
         employeeId: employeeId
       });
-      
+
       setFormData({ description: '', claimType: 'Medical', amount: '' });
       // Refresh claims using the same ID
       fetchClaims(employeeId);
@@ -104,7 +106,7 @@ export default function ClaimsPage() {
       const msg = error?.response?.data?.message || "Failed to submit claim.";
       setError(msg);
     } finally {
-        setSaving(false);
+      setSaving(false);
     }
   };
 
@@ -130,7 +132,7 @@ export default function ClaimsPage() {
         </Box>
         <Button
           startIcon={<RefreshIcon />}
-          onClick={() => fetchClaims(user?.employeeId || user?.userId || '')}
+          onClick={() => fetchClaims((user as any)?.employeeId || (user as any)?.userId || '')}
           disabled={loading}
           variant="outlined"
           sx={{ borderRadius: 2 }}
@@ -165,7 +167,7 @@ export default function ClaimsPage() {
                   <MenuItem value="Travel">Travel</MenuItem>
                   <MenuItem value="Other">Other</MenuItem>
                 </TextField>
-                
+
                 <TextField
                   label="Description"
                   value={formData.description}
@@ -177,7 +179,7 @@ export default function ClaimsPage() {
                   rows={3}
                   placeholder="Describe your claim..."
                 />
-                
+
                 <TextField
                   label="Amount"
                   type="number"
@@ -223,9 +225,9 @@ export default function ClaimsPage() {
                 </Typography>
               </Box>
               {loading ? (
-                  <Box sx={{ p: 4, textAlign: 'center' }}>
-                      <CircularProgress />
-                  </Box>
+                <Box sx={{ p: 4, textAlign: 'center' }}>
+                  <CircularProgress />
+                </Box>
               ) : claims.length === 0 ? (
                 <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
                   No claims found. Submit one to get started.
